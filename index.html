@@ -112,7 +112,7 @@ img {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.6s;
+  transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.4s;
 }
 
 .loader.hidden {
@@ -144,7 +144,7 @@ img {
   height: 100%;
   width: 0;
   background: var(--accent);
-  animation: load-fill 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: load-fill 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 @keyframes load-fill {
@@ -1991,8 +1991,8 @@ img {
   window.addEventListener('load', function() {
     setTimeout(function() {
       loader.classList.add('hidden');
-      setTimeout(function() { loader.style.display = 'none'; }, 600);
-    }, 2000);
+      setTimeout(function() { loader.style.display = 'none'; }, 400);
+    }, 300);
   });
 })();
 
