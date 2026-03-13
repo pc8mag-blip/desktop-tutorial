@@ -711,33 +711,32 @@ img {
   font-weight: 700;
 }
 
-.ebook-terminal {
+.ebook-preview {
   margin-top: 2.5rem;
-  background: var(--bg-dark);
-  border: 2px solid var(--bg-elevated);
+  background: var(--bg-elevated);
+  border-left: 4px solid var(--accent);
   padding: 0;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
   overflow: hidden;
 }
 
-.ebook-terminal-bar {
-  background: var(--bg-elevated);
-  padding: 0.5rem 0.8rem;
-}
-
-
-.ebook-terminal-body {
-  padding: 1.2rem;
-  line-height: 1.9;
-  color: var(--text-secondary);
-}
-
-.ebook-terminal-body .cmd {
+.ebook-preview-header {
+  padding: 1rem 1.5rem 0.5rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.9rem;
   color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.ebook-terminal-body .result {
+.ebook-preview-body {
+  padding: 0.5rem 1.5rem 1.2rem;
+  line-height: 2;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.ebook-preview-body .result {
   color: var(--accent-warm);
 }
 
@@ -1571,7 +1570,7 @@ img {
     <li><a href="#faq">FAQ</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
-  <a href="/" class="nav-lang" aria-label="Przełącz na polski">PL</a>
+  <a href="../" class="nav-lang" aria-label="Przełącz na polski">PL</a>
   <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
     <span></span><span></span><span></span>
   </button>
@@ -1680,14 +1679,12 @@ img {
           </ul>
           <a href="#contact" class="btn-primary glitch-hover reveal reveal-delay-3"><span>Get the free ebook</span></a>
 
-          <div class="ebook-terminal reveal reveal-delay-4">
-            <div class="ebook-terminal-bar"></div>
-            <div class="ebook-terminal-body">
-              <span class="cmd">$</span> cat first-step.md<br>
+          <div class="ebook-preview reveal reveal-delay-4">
+            <div class="ebook-preview-header">What's inside:</div>
+            <div class="ebook-preview-body">
               <span class="result">→ Chapter 1: Why 90% of courses are a waste of time</span><br>
               <span class="result">→ Chapter 2: AI in 15 minutes — no code, no bullsh*t</span><br>
-              <span class="result">→ Chapter 3: Your first client in 30 days</span><br>
-              <span class="cmd">$</span> <span class="blink-cursor">_</span>
+              <span class="result">→ Chapter 3: Your first client in 30 days</span>
             </div>
           </div>
         </div>
