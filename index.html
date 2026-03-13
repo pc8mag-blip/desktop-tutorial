@@ -1497,6 +1497,103 @@ img {
 }
 
 /* ============================================
+   SCROLL PROGRESS BAR
+   ============================================ */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--accent), var(--accent-hot), var(--accent-warm));
+  z-index: 1001;
+  pointer-events: none;
+}
+
+/* ============================================
+   SECTION: FAQ
+   ============================================ */
+.section-faq {
+  padding: 6rem 1.5rem 6.5rem;
+  background: var(--bg-mid);
+  position: relative;
+}
+
+.section-faq::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-warm), transparent);
+}
+
+.faq-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 760px;
+}
+
+.faq-grid details {
+  border: 2px solid var(--bg-elevated);
+  background: rgba(26, 26, 26, 0.4);
+  transition: border-color 0.3s;
+}
+
+.faq-grid details[open] {
+  border-color: var(--accent);
+}
+
+.faq-grid summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem;
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  transition: color 0.2s;
+}
+
+.faq-grid summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-grid summary::after {
+  content: '+';
+  color: var(--accent);
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  font-weight: 400;
+  transition: transform 0.3s;
+}
+
+.faq-grid details[open] summary::after {
+  content: '−';
+}
+
+.faq-grid summary:hover {
+  color: var(--accent);
+}
+
+.faq-grid p {
+  padding: 0 1.2rem 1.2rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+/* ============================================
    RESPONSIVE FINE-TUNING
    ============================================ */
 @media (max-width: 480px) {
@@ -1512,6 +1609,9 @@ img {
 
 <!-- Skip Link -->
 <a href="#main" class="skip-link">Przejdź do treści</a>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
 <!-- Loader -->
 <div class="loader" id="loader" aria-hidden="true">
@@ -1532,6 +1632,7 @@ img {
     <li><a href="#ebook">Ebook</a></li>
     <li><a href="#about">O mnie</a></li>
     <li><a href="#offer">Oferta</a></li>
+    <li><a href="#faq">FAQ</a></li>
     <li><a href="#contact">Kontakt</a></li>
   </ul>
   <button class="nav-lang" id="langToggle" aria-label="Switch to English">EN</button>
@@ -1546,6 +1647,7 @@ img {
   <a href="#ebook" class="mobile-menu-link">Ebook</a>
   <a href="#about" class="mobile-menu-link">O mnie</a>
   <a href="#offer" class="mobile-menu-link">Oferta</a>
+  <a href="#faq" class="mobile-menu-link">FAQ</a>
   <a href="#contact" class="mobile-menu-link">Kontakt</a>
 </div>
 
@@ -1797,6 +1899,36 @@ img {
     </div>
   </section>
 
+  <!-- FAQ -->
+  <section class="section-faq" id="faq">
+    <div class="container-wide">
+      <div class="section-tag reveal">Najczęstsze pytania</div>
+      <h2 class="problem-heading reveal reveal-delay-1">Zanim zapytasz — <span class="accent">odpowiadam.</span></h2>
+      <div class="faq-grid">
+        <details class="reveal reveal-delay-2">
+          <summary>Czy to jest dla mnie, jeśli nie ogarniam AI?</summary>
+          <p>Tak. Najpierw ustawiamy sens biznesowy. Narzędzia wchodzą dopiero wtedy, gdy wiesz po co ich używać. Nie musisz być techniczny — musisz rozumieć efekt.</p>
+        </details>
+        <details class="reveal reveal-delay-2">
+          <summary>Czy muszę już mieć biznes?</summary>
+          <p>Nie. Wystarczy doświadczenie, konkretny problem do rozwiązania i gotowość do pierwszego ruchu. Biznes buduje się w praktyce, nie w notatniku.</p>
+        </details>
+        <details class="reveal reveal-delay-3">
+          <summary>Ile czasu trzeba realnie mieć?</summary>
+          <p>Jeśli nie możesz znaleźć 3-5 godzin tygodniowo, to nic sensownego nie zbudujesz. Ale nie potrzebujesz wolnego miesiąca. Potrzebujesz systemu i cięcia bzdur.</p>
+        </details>
+        <details class="reveal reveal-delay-3">
+          <summary>Czy ten ton na stronie jest też na konsultacjach?</summary>
+          <p>Tak. Bez teatru i bez przytulania problemu. Z szacunkiem, ale wprost. Jeśli wolisz miękkie prowadzenie — to nie ten adres.</p>
+        </details>
+        <details class="reveal reveal-delay-4">
+          <summary>Co dostanę po wysłaniu formularza?</summary>
+          <p>Twoje zgłoszenie zostanie zapisane. Odpowiadam w ciągu 24h. Jeśli piszesz „ebook" — dostaniesz linka do pobrania. Jeśli chcesz porozmawiać — umówimy 15-minutowy call.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
   <!-- CONTACT -->
   <section class="section-contact" id="contact">
     <div class="contact-inner">
@@ -1960,7 +2092,20 @@ img {
 })();
 
 /* ============================================
-   FORM HANDLING
+   SCROLL PROGRESS BAR
+   ============================================ */
+(function() {
+  var bar = document.getElementById('scrollProgress');
+  if (!bar) return;
+  window.addEventListener('scroll', function() {
+    var scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    var ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+    bar.style.transform = 'scaleX(' + Math.min(Math.max(ratio, 0), 1) + ')';
+  }, { passive: true });
+})();
+
+/* ============================================
+   FORM HANDLING (with localStorage)
    ============================================ */
 (function() {
   var form = document.getElementById('contactForm');
@@ -1969,26 +2114,37 @@ img {
   form.addEventListener('submit', function(e) {
     e.preventDefault();
 
-    var name = document.getElementById('name');
-    var email = document.getElementById('email');
+    var nameEl = document.getElementById('name');
+    var emailEl = document.getElementById('email');
+    var messageEl = document.getElementById('message');
     var valid = true;
 
-    // simple validation
-    if (!name.value.trim()) {
-      name.style.borderColor = 'var(--accent)';
+    if (!nameEl.value.trim()) {
+      nameEl.style.borderColor = 'var(--accent)';
       valid = false;
     } else {
-      name.style.borderColor = '';
+      nameEl.style.borderColor = '';
     }
 
-    if (!email.value.trim() || !email.value.includes('@')) {
-      email.style.borderColor = 'var(--accent)';
+    if (!emailEl.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
+      emailEl.style.borderColor = 'var(--accent)';
       valid = false;
     } else {
-      email.style.borderColor = '';
+      emailEl.style.borderColor = '';
     }
 
     if (valid) {
+      // Save to localStorage
+      var submission = {
+        name: nameEl.value.trim(),
+        email: emailEl.value.trim(),
+        message: messageEl.value.trim(),
+        date: new Date().toISOString()
+      };
+      var saved = JSON.parse(localStorage.getItem('pc_contacts') || '[]');
+      saved.push(submission);
+      localStorage.setItem('pc_contacts', JSON.stringify(saved));
+
       form.style.display = 'none';
       success.style.display = 'block';
     }
