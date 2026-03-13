@@ -179,19 +179,6 @@ img {
   gap: 0.6rem;
 }
 
-.nav-logo-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border: 3px solid var(--accent);
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--accent);
-  flex-shrink: 0;
-}
 
 .nav-links {
   display: flex;
@@ -441,7 +428,7 @@ img {
   letter-spacing: 0.02em;
   position: relative;
   overflow: hidden;
-  transition: background 0.2s, transform 0.2s;
+  transition: background 0.2s, transform 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
 .btn-primary::before {
@@ -455,7 +442,8 @@ img {
 
 .btn-primary:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--accent);
+  box-shadow: 4px 4px 0 var(--accent-warm);
+  color: #0D0D0D;
 }
 
 .btn-primary:active {
@@ -738,21 +726,8 @@ img {
 .ebook-terminal-bar {
   background: var(--bg-elevated);
   padding: 0.5rem 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.ebook-terminal-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--text-muted);
-}
-
-.ebook-terminal-dot:first-child { background: #E63946; }
-.ebook-terminal-dot:nth-child(2) { background: var(--accent-warm); }
-.ebook-terminal-dot:nth-child(3) { background: #4CAF50; }
 
 .ebook-terminal-body {
   padding: 1.2rem;
@@ -1590,7 +1565,6 @@ img {
 <!-- Navigation -->
 <nav class="nav" id="nav" role="navigation" aria-label="Nawigacja główna">
   <a href="#" class="nav-logo" aria-label="Strona główna Piotr Chmielewski">
-    <span class="nav-logo-mark">P</span>
     <span>Piotr<br>Chmielewski</span>
   </a>
   <ul class="nav-links">
@@ -1711,11 +1685,7 @@ img {
           <a href="#contact" class="btn-primary glitch-hover reveal reveal-delay-3"><span>Pobierz darmowego ebooka</span></a>
 
           <div class="ebook-terminal reveal reveal-delay-4">
-            <div class="ebook-terminal-bar">
-              <span class="ebook-terminal-dot"></span>
-              <span class="ebook-terminal-dot"></span>
-              <span class="ebook-terminal-dot"></span>
-            </div>
+            <div class="ebook-terminal-bar"></div>
             <div class="ebook-terminal-body">
               <span class="cmd">$</span> cat pierwszy-krok.md<br>
               <span class="result">→ Rozdział 1: Dlaczego 90% kursów to strata czasu</span><br>
