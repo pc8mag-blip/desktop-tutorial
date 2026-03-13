@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Piotr Chmielewski — AI Consultant | Pierwszy Krok albo Spierdalaj</title>
+<title>Piotr Chmielewski — AI Consultant | Pierwszy Krok albo Spi...dalaj</title>
 <meta name="description" content="Piotr Chmielewski — polski konsultant AI w UK. Pomagam Polakom za granicą przestać zbierać wiedzę i zacząć ją sprzedawać. Pobierz darmowego ebooka.">
 <meta name="keywords" content="AI konsultant, Polacy w UK, biznes online, ebook, Piotr Chmielewski">
 <meta name="author" content="Piotr Chmielewski">
-<meta property="og:title" content="Piotr Chmielewski — Pierwszy Krok albo Spierdalaj">
+<meta property="og:title" content="Piotr Chmielewski — Pierwszy Krok albo Spi...dalaj">
 <meta property="og:description" content="Przestań zbierać wiedzę. Zacznij ją sprzedawać. Darmowy ebook dla Polaków w UK.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pl_PL">
@@ -57,7 +57,7 @@ body {
   color: var(--text-primary);
   line-height: 1.65;
   overflow-x: hidden;
-  cursor: crosshair;
+  cursor: default;
 }
 
 body::-webkit-scrollbar {
@@ -98,32 +98,7 @@ img {
   display: block;
 }
 
-/* ============================================
-   CUSTOM CURSOR DOT
-   ============================================ */
-.cursor-dot {
-  width: 12px;
-  height: 12px;
-  background: var(--accent);
-  border-radius: 50%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 9999;
-  mix-blend-mode: difference;
-  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
-}
-
-.cursor-dot.hover {
-  transform: scale(3);
-  background: var(--accent-hot);
-}
-
-@media (pointer: coarse) {
-  .cursor-dot { display: none; }
-}
+/* Custom cursor removed */
 
 /* ============================================
    LOADING SCREEN
@@ -477,16 +452,7 @@ img {
 }
 
 .btn-primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--accent-hot);
-  transform: translateX(-101%);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.btn-primary:hover::before {
-  transform: translateX(0);
+  display: none;
 }
 
 .btn-primary span {
@@ -1554,7 +1520,6 @@ img {
 </div>
 
 <!-- Custom Cursor -->
-<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
 
 <!-- Navigation -->
 <nav class="nav" id="nav" role="navigation" aria-label="Nawigacja główna">
@@ -1618,14 +1583,14 @@ img {
       <span class="ticker-item">POLSKI KONSULTANT W UK <span class="sep">/</span></span>
       <span class="ticker-item">ZERO BULLSHITU <span class="sep">/</span></span>
       <span class="ticker-item">KONKRET > MOTYWACJA <span class="sep">/</span></span>
-      <span class="ticker-item">PIERWSZY KROK ALBO SPIERDALAJ <span class="sep">/</span></span>
+      <span class="ticker-item">PIERWSZY KROK ALBO SPI...DALAJ <span class="sep">/</span></span>
       <!-- duplicate for seamless loop -->
       <span class="ticker-item">AI DLA LUDZI <span class="sep">/</span></span>
       <span class="ticker-item">PRZESTAŃ ZBIERAĆ — ZACZNIJ ROBIĆ <span class="sep">/</span></span>
       <span class="ticker-item">POLSKI KONSULTANT W UK <span class="sep">/</span></span>
       <span class="ticker-item">ZERO BULLSHITU <span class="sep">/</span></span>
       <span class="ticker-item">KONKRET > MOTYWACJA <span class="sep">/</span></span>
-      <span class="ticker-item">PIERWSZY KROK ALBO SPIERDALAJ <span class="sep">/</span></span>
+      <span class="ticker-item">PIERWSZY KROK ALBO SPI...DALAJ <span class="sep">/</span></span>
     </div>
   </div>
 
@@ -1655,13 +1620,13 @@ img {
       <div class="section-tag reveal">Darmowy ebook</div>
       <div class="ebook-grid">
         <div class="ebook-visual reveal reveal-delay-1">
-          <div class="ebook-cover" role="img" aria-label="Okładka ebooka: Pierwszy Krok albo Spierdalaj">
+          <div class="ebook-cover" role="img" aria-label="Okładka ebooka: Pierwszy Krok albo Spi...dalaj">
             <div class="ebook-cover-bg"></div>
             <div class="ebook-cover-lines" aria-hidden="true"></div>
             <div class="ebook-cover-content">
               <div class="ebook-cover-label">Ebook / Piotr Chmielewski</div>
               <div class="ebook-cover-title">
-                Pierwszy Krok<br>albo <span class="accent">Spierdalaj</span>
+                Pierwszy Krok<br>albo <span class="accent">Spi...dalaj</span>
               </div>
               <div class="ebook-cover-author">piotrchmielewski.com — 2025</div>
             </div>
@@ -1671,7 +1636,7 @@ img {
         <div class="ebook-info">
           <h2 class="reveal">Przestań zbierać wiedzę.<br><span class="accent">Zacznij ją sprzedawać.</span></h2>
           <p class="ebook-desc reveal reveal-delay-1">
-            Ten ebook nie jest kolejnym motywacyjnym bełkotem. To brutalna instrukcja obsługi dla Polaków w UK, którzy chcą wykorzystać AI do zbudowania czegoś swojego. Bez lania wody. Bez guru-pierdolenia.
+            Ten ebook nie jest kolejnym motywacyjnym bełkotem. To brutalna instrukcja obsługi dla Polaków w UK, którzy chcą wykorzystać AI do zbudowania czegoś swojego. Bez lania wody. Bez guru-pie...olenia.
           </p>
           <ul class="ebook-features reveal reveal-delay-2">
             <li>Konkretne narzędzia AI które działają TERAZ</li>
@@ -1718,7 +1683,7 @@ img {
           </p>
           <div class="about-stats reveal reveal-delay-3">
             <div class="stat-card">
-              <div class="stat-number">10+</div>
+              <div class="stat-number">15+</div>
               <div class="stat-label">Lat w UK</div>
             </div>
             <div class="stat-card">
@@ -1760,14 +1725,14 @@ img {
       <div class="offer-bento">
         <div class="offer-card featured reveal reveal-delay-2">
           <div class="offer-card-number">01 / DARMOWY</div>
-          <h3>Ebook: Pierwszy Krok albo Spierdalaj</h3>
+          <h3>Ebook: Pierwszy Krok albo Spi...dalaj</h3>
           <p>Darmowy przewodnik po AI dla Polaków w UK. Bez lania wody, bez żargonu. Konkretne narzędzia, konkretny plan. Pobierz, przeczytaj, zrób pierwszy krok — albo nie narzekaj.</p>
           <div class="price">CENA: £0 — ZERO — NIC — DARMO</div>
         </div>
         <div class="offer-card reveal reveal-delay-3">
           <div class="offer-card-number">02 / LIVE</div>
           <h3>Webinar: AI dla normalnych ludzi</h3>
-          <p>90 minut na żywo. Pokazuję dokładnie jak używać AI w biznesie. Bez kodu, bez komplikacji. Pytania na żywo.</p>
+          <p>45 minut na żywo. Pokazuję dokładnie jak używać AI w biznesie. Bez kodu, bez komplikacji. Pytania na żywo.</p>
           <div class="price">SZCZEGÓŁY WKRÓTCE</div>
         </div>
         <div class="offer-card reveal reveal-delay-3">
@@ -1823,7 +1788,7 @@ img {
         Po polsku. Z tłumaczeniem na ludzki. Dla ludzi którzy robią, nie dla tych co oglądają.
       </p>
       <div class="webinar-details reveal reveal-delay-3">
-        <span class="webinar-detail"><span class="dot"></span> 90 minut na żywo</span>
+        <span class="webinar-detail"><span class="dot"></span> 45 minut na żywo</span>
         <span class="webinar-detail"><span class="dot"></span> Sesja Q&A</span>
         <span class="webinar-detail"><span class="dot"></span> Nagranie do obejrzenia później</span>
         <span class="webinar-detail"><span class="dot"></span> Po polsku</span>
@@ -1836,7 +1801,7 @@ img {
   <section class="section-contact" id="contact">
     <div class="contact-inner">
       <div class="section-tag reveal">Kontakt</div>
-      <h2 class="reveal reveal-delay-1">Przestań pierdolić,<br><span class="accent">zacznij robić.</span></h2>
+      <h2 class="reveal reveal-delay-1">Przestań pie...olić,<br><span class="accent">zacznij robić.</span></h2>
       <p class="reveal reveal-delay-2">
         Napisz. Pogadamy. Bez zobowiązań. Jeśli mogę Ci pomóc — powiem jak. Jeśli nie — powiem to wprost. Nie marnuję swojego czasu ani Twojego.
       </p>
@@ -1899,34 +1864,7 @@ img {
   });
 })();
 
-/* ============================================
-   CUSTOM CURSOR
-   ============================================ */
-(function() {
-  const dot = document.getElementById('cursorDot');
-  if (!dot || window.matchMedia('(pointer: coarse)').matches) return;
-
-  let mx = 0, my = 0, dx = 0, dy = 0;
-
-  document.addEventListener('mousemove', function(e) {
-    mx = e.clientX;
-    my = e.clientY;
-  });
-
-  function animate() {
-    dx += (mx - dx) * 0.18;
-    dy += (my - dy) * 0.18;
-    dot.style.transform = 'translate(' + (dx - 6) + 'px,' + (dy - 6) + 'px)';
-    requestAnimationFrame(animate);
-  }
-  animate();
-
-  var hoverTargets = document.querySelectorAll('a, button, .offer-card, .proof-card, .stat-card, .ebook-cover');
-  hoverTargets.forEach(function(el) {
-    el.addEventListener('mouseenter', function() { dot.classList.add('hover'); });
-    el.addEventListener('mouseleave', function() { dot.classList.remove('hover'); });
-  });
-})();
+/* Custom cursor removed */
 
 /* ============================================
    NAV HIDE/SHOW ON SCROLL
