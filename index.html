@@ -2121,8 +2121,11 @@ img {
   window.addEventListener('scroll', function() {
     var scrollY = window.scrollY;
     if (scrollY < window.innerHeight) {
-      heroContent.style.transform = 'translateY(' + (scrollY * 0.15) + 'px)';
-      heroContent.style.opacity = 1 - (scrollY / (window.innerHeight * 0.9));
+      var fadeStart = window.innerHeight * 0.35;
+      var fadeEnd = window.innerHeight * 0.95;
+      var opacity = scrollY < fadeStart ? 1 : 1 - (scrollY - fadeStart) / (fadeEnd - fadeStart);
+      heroContent.style.transform = 'translateY(' + (scrollY * 0.1) + 'px)';
+      heroContent.style.opacity = Math.max(0, opacity);
     }
   });
 })();
