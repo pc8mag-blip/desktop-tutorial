@@ -415,16 +415,69 @@ img {
   font-size: 0.78rem;
   padding: 0.9rem 1.8rem;
   background: transparent;
-  color: var(--text-secondary);
-  border: 2px solid var(--bg-elevated);
+  color: var(--text-primary);
+  border: 2px solid var(--text-primary);
   cursor: pointer;
   letter-spacing: 0.08em;
-  transition: border-color 0.25s, color 0.25s;
+  transition: border-color 0.25s, color 0.25s, background 0.25s;
 }
 
 .btn-ghost:hover {
   border-color: var(--accent);
   color: var(--text-primary);
+  background: rgba(230, 57, 70, 0.1);
+}
+
+/* ============================================
+   FLOATING CTA BAR
+   ============================================ */
+.floating-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: rgba(13, 13, 13, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(230, 57, 70, 0.3);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.floating-cta.visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.floating-cta .btn-primary {
+  font-size: 0.72rem;
+  padding: 0.7rem 1.4rem;
+}
+
+.floating-cta .btn-ghost {
+  font-size: 0.72rem;
+  padding: 0.7rem 1.4rem;
+}
+
+@media (max-width: 480px) {
+  .floating-cta {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+  }
+  .floating-cta .btn-primary,
+  .floating-cta .btn-ghost {
+    text-align: center;
+    width: 100%;
+  }
 }
 
 
@@ -1553,8 +1606,8 @@ img {
         Mieszkasz w UK, harówka na produkcji, a po nocach scrollujesz kolejne szkolenia. <strong>Zero efektu.</strong> Czas to zmienić. Konkretnie.
       </p>
       <div class="hero-ctas reveal reveal-delay-3">
-        <a href="#ebook" class="btn-primary glitch-hover"><span>Pobierz darmowego ebooka</span></a>
-        <a href="#contact" class="btn-ghost">Umów 15-min rozmowę</a>
+        <a href="#contact" class="btn-primary glitch-hover scroll-to-form"><span>Pobierz darmowego ebooka</span></a>
+        <a href="#contact" class="btn-ghost scroll-to-form">Umów 15-min rozmowę</a>
       </div>
     </div>
   </section>
@@ -1807,7 +1860,7 @@ img {
       <p class="reveal reveal-delay-2">
         Napisz. Pogadamy. Bez zobowiązań. Jeśli mogę Ci pomóc — powiem jak. Jeśli nie — powiem to wprost. Nie marnuję swojego czasu ani Twojego.
       </p>
-      <form class="contact-form reveal reveal-delay-3" id="contactForm" novalidate>
+      <form class="contact-form reveal reveal-delay-3" id="contactForm" name="contact-pl" method="POST" data-netlify="true" novalidate>
         <div class="form-row">
           <div class="form-group">
             <label for="name">Imię</label>
@@ -1839,6 +1892,12 @@ img {
 <button class="back-to-top" id="backToTop" aria-label="Wróć na górę">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
 </button>
+
+<!-- Floating CTA Bar -->
+<div class="floating-cta" id="floatingCta">
+  <a href="#contact" class="btn-primary glitch-hover scroll-to-form"><span>Pobierz darmowego ebooka</span></a>
+  <a href="#contact" class="btn-ghost scroll-to-form">Umów 15-min rozmowę</a>
+</div>
 
 <!-- Footer -->
 <footer class="footer" role="contentinfo">
@@ -1957,7 +2016,7 @@ img {
 
 
 /* ============================================
-   FORM HANDLING (with localStorage)
+   FORM HANDLING (Netlify Forms + localStorage backup)
    ============================================ */
 (function() {
   var form = document.getElementById('contactForm');
@@ -1986,22 +2045,40 @@ img {
     }
 
     if (valid) {
-      // Save to localStorage
-      var submission = {
-        name: nameEl.value.trim(),
-        email: emailEl.value.trim(),
-        message: messageEl.value.trim(),
-        date: new Date().toISOString()
-      };
-      var saved = JSON.parse(localStorage.getItem('pc_contacts') || '[]');
-      saved.push(submission);
-      localStorage.setItem('pc_contacts', JSON.stringify(saved));
+      var formData = new FormData(form);
 
-      nameEl.value = '';
-      emailEl.value = '';
-      messageEl.value = '';
-      success.style.display = 'block';
-      setTimeout(function() { success.style.display = 'none'; }, 5000);
+      fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(formData).toString()
+      }).then(function(response) {
+        if (response.ok) {
+          nameEl.value = '';
+          emailEl.value = '';
+          messageEl.value = '';
+          success.style.display = 'block';
+          setTimeout(function() { success.style.display = 'none'; }, 5000);
+        } else {
+          alert('Coś poszło nie tak. Spróbuj ponownie.');
+        }
+      }).catch(function() {
+        // Save to localStorage as backup if network fails
+        var submission = {
+          name: nameEl.value.trim(),
+          email: emailEl.value.trim(),
+          message: messageEl.value.trim(),
+          date: new Date().toISOString()
+        };
+        var saved = JSON.parse(localStorage.getItem('pc_contacts') || '[]');
+        saved.push(submission);
+        localStorage.setItem('pc_contacts', JSON.stringify(saved));
+
+        nameEl.value = '';
+        emailEl.value = '';
+        messageEl.value = '';
+        success.style.display = 'block';
+        setTimeout(function() { success.style.display = 'none'; }, 5000);
+      });
     }
   });
 })();
@@ -2012,14 +2089,57 @@ img {
 (function() {
   document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
     anchor.addEventListener('click', function(e) {
-      var target = document.querySelector(this.getAttribute('href'));
+      var href = this.getAttribute('href');
+      var target = document.querySelector(href);
       if (target) {
         e.preventDefault();
         var offsetTop = target.getBoundingClientRect().top + window.scrollY - 80;
         window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+        // Focus email input when scrolling to contact
+        if (href === '#contact') {
+          setTimeout(function() {
+            var emailInput = document.getElementById('email');
+            if (emailInput) emailInput.focus();
+          }, 600);
+        }
       }
     });
   });
+})();
+
+/* ============================================
+   FLOATING CTA BAR
+   ============================================ */
+(function() {
+  var heroCtas = document.querySelector('.hero-ctas');
+  var floatingCta = document.getElementById('floatingCta');
+  var contactSection = document.getElementById('contact');
+  if (!heroCtas || !floatingCta) return;
+
+  function checkScroll() {
+    var heroBottom = heroCtas.getBoundingClientRect().bottom;
+    var contactTop = contactSection ? contactSection.getBoundingClientRect().top : Infinity;
+    var windowHeight = window.innerHeight;
+
+    // Show when hero CTAs scrolled out of view, hide when contact section is visible
+    if (heroBottom < 0 && contactTop > windowHeight * 0.5) {
+      floatingCta.classList.add('visible');
+    } else {
+      floatingCta.classList.remove('visible');
+    }
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(function() {
+        checkScroll();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+  checkScroll();
 })();
 
 /* ============================================
