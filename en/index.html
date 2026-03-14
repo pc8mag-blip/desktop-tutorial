@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Piotr Chmielewski — AI Implementation for Small Businesses | First Step or Get Lost</title>
+<meta name="description" content="Piotr Chmielewski — AI implementation for small businesses in the UK. I help business owners stop collecting courses and start building with AI. Download the free ebook.">
+<meta name="keywords" content="AI implementation, small business, UK business, AI for SME, ebook, Piotr Chmielewski">
+<meta name="author" content="Piotr Chmielewski">
+<meta property="og:title" content="Piotr Chmielewski — First Step or Get Lost">
+<meta property="og:description" content="Stop collecting knowledge. Start selling it. Free ebook for business owners ready to use AI.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_GB">
+<meta property="og:locale:alternate" content="pl_PL">
+<link rel="alternate" hreflang="en" href="https://piotrchmielewski.com/en/">
+<link rel="alternate" hreflang="pl" href="https://piotrchmielewski.com/">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230D0D0D'/%3E%3Crect x='3' y='3' width='94' height='94' fill='none' stroke='%23E63946' stroke-width='6'/%3E%3Ctext x='50' y='72' font-family='monospace' font-size='68' font-weight='bold' fill='%23F1EDEE' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   RESET & BASE
+   ============================================ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-deep: #0D0D0D;
+  --bg-dark: #121418;
+  --bg-mid: #1A1A1A;
+  --bg-elevated: #222228;
+  --accent: #E63946;
+  --accent-hot: #FF4D00;
+  --accent-warm: #F4A261;
+  --text-primary: #F1EDEE;
+  --text-secondary: #8B8B8B;
+  --text-muted: #6B7280;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 18px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg-deep);
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.65;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+body::-webkit-scrollbar {
+  width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+
+body::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border: 2px solid var(--bg-deep);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--text-primary);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a:hover {
+  color: var(--accent-hot);
+}
+
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ============================================
+   LOADING SCREEN
+   ============================================ */
+.loader {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-deep);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.4s;
+}
+
+.loader.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loader-bar {
+  width: 200px;
+  height: 3px;
+  background: var(--bg-mid);
+  margin-top: 1.2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.loader-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  animation: load-fill 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes load-fill {
+  to { width: 100%; }
+}
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 1.1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(13, 13, 13, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(230, 57, 70, 0.15);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav.nav-hidden {
+  transform: translateY(-110%);
+}
+
+.nav-logo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 0.25s;
+  position: relative;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-links a:hover {
+  color: var(--text-primary);
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+.nav-lang {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.35rem 0.7rem;
+  border: 2px solid var(--text-muted);
+  color: var(--text-secondary);
+  background: transparent;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: border-color 0.25s, color 0.25s;
+}
+
+.nav-lang:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.nav-burger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.nav-burger span {
+  display: block;
+  width: 28px;
+  height: 2px;
+  background: var(--text-primary);
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.nav-burger.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.nav-burger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-burger.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 100%;
+  height: 100vh;
+  background: var(--bg-deep);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 2.5rem;
+  transition: right 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mobile-menu.open {
+  right: 0;
+}
+
+.mobile-menu a {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity 0.4s, transform 0.4s, color 0.2s;
+}
+
+.mobile-menu.open a {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.mobile-menu.open a:nth-child(1) { transition-delay: 0.15s; }
+.mobile-menu.open a:nth-child(2) { transition-delay: 0.22s; }
+.mobile-menu.open a:nth-child(3) { transition-delay: 0.29s; }
+.mobile-menu.open a:nth-child(4) { transition-delay: 0.36s; }
+.mobile-menu.open a:nth-child(5) { transition-delay: 0.43s; }
+
+.mobile-menu a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .nav-links, .nav-lang { display: none; }
+  .nav-burger { display: flex; }
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 8rem 1.5rem 4rem;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+
+.hero-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(230, 57, 70, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(230, 57, 70, 0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+
+.hero-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px;
+  pointer-events: none;
+}
+
+.hero-content {
+  max-width: 900px;
+  margin-left: 5vw;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.hero-tag::before {
+  content: '';
+  width: 40px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.hero-h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  margin-bottom: 1.75rem;
+}
+
+.hero-h1 .accent {
+  color: var(--accent);
+  text-shadow: 0 0 30px rgba(230, 57, 70, 0.35);
+}
+
+.hero-h1 .accent-warm {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-warm) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  max-width: 540px;
+  margin-bottom: 2.8rem;
+  line-height: 1.7;
+}
+
+.hero-sub strong {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-primary {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 1rem 2.2rem;
+  background: var(--accent);
+  color: var(--text-primary);
+  border: 3px solid var(--accent);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s, transform 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary::before {
+  display: none;
+}
+
+.btn-primary span {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--accent-warm);
+  color: #0D0D0D;
+}
+
+.btn-primary:active {
+  transform: translate(0, 0);
+  box-shadow: none;
+}
+
+.btn-ghost {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 0.9rem 1.8rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 2px solid var(--bg-elevated);
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: border-color 0.25s, color 0.25s;
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+
+/* ============================================
+   SECTION: PROBLEM AGITATION
+   ============================================ */
+.section-problem {
+  padding: 6rem 1.5rem 5rem;
+  background: var(--bg-dark);
+  position: relative;
+}
+
+.section-problem::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.container-narrow {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.container-wide {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.section-tag::before {
+  content: '//';
+  color: var(--text-muted);
+}
+
+.problem-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 2.5rem;
+}
+
+.problem-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+}
+
+.problem-list li {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  padding-left: 2rem;
+  position: relative;
+  line-height: 1.65;
+}
+
+.problem-list li::before {
+  content: '>';
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.problem-callout {
+  margin-top: 3rem;
+  padding: 1.75rem 2.1rem 1.8rem 1.9rem;
+  border-left: 4px solid var(--accent);
+  background: rgba(230, 57, 70, 0.06);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+.problem-callout .highlight {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ============================================
+   SECTION: EBOOK
+   ============================================ */
+.section-ebook {
+  padding: 6.5rem 1.5rem 6rem;
+  background: var(--bg-deep);
+  position: relative;
+}
+
+.ebook-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.ebook-visual {
+  position: relative;
+}
+
+.ebook-cover {
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 3/4;
+  background: var(--bg-mid);
+  border: 3px solid var(--accent);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 2.5rem 2rem;
+  overflow: hidden;
+  transform: rotate(-2deg);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ebook-cover:hover {
+  transform: rotate(0deg) scale(1.02);
+}
+
+.ebook-cover-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(170deg, var(--bg-mid) 0%, var(--bg-deep) 100%);
+}
+
+.ebook-cover-lines {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 28px,
+    rgba(230, 57, 70, 0.07) 28px,
+    rgba(230, 57, 70, 0.07) 29px
+  );
+}
+
+.ebook-cover-content {
+  position: relative;
+  z-index: 2;
+}
+
+.ebook-cover-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 0.8rem;
+}
+
+.ebook-cover-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.8rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.ebook-cover-title .accent {
+  color: var(--accent);
+}
+
+.ebook-cover-author {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 1.5rem;
+  letter-spacing: 0.1em;
+}
+
+.ebook-shadow {
+  position: absolute;
+  bottom: -15px;
+  left: 20px;
+  right: -20px;
+  top: 15px;
+  border: 2px solid rgba(230, 57, 70, 0.2);
+  z-index: -1;
+}
+
+.ebook-info h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.7rem, 3.5vw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.5rem;
+}
+
+.ebook-info h2 .accent {
+  color: var(--accent);
+}
+
+.ebook-desc {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+
+.ebook-features {
+  list-style: none;
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.ebook-features li {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding-left: 1.8rem;
+  position: relative;
+  line-height: 1.6;
+}
+
+.ebook-features li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.ebook-preview {
+  margin-top: 2.5rem;
+  background: var(--bg-elevated);
+  border-left: 4px solid var(--accent);
+  padding: 0;
+  overflow: hidden;
+}
+
+.ebook-preview-header {
+  padding: 1rem 1.5rem 0.5rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ebook-preview-body {
+  padding: 0.5rem 1.5rem 1.2rem;
+  line-height: 2;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.ebook-preview-body .result {
+  color: var(--accent-warm);
+}
+
+@media (max-width: 768px) {
+  .ebook-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  .ebook-visual {
+    order: -1;
+    display: flex;
+    justify-content: center;
+  }
+  .ebook-cover {
+    max-width: 280px;
+  }
+}
+
+/* ============================================
+   SECTION: ABOUT
+   ============================================ */
+.section-about {
+  padding: 6rem 1.5rem 6.5rem;
+  background: var(--bg-mid);
+  position: relative;
+}
+
+.section-about::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(244, 162, 97, 0.4), transparent);
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 5fr 4fr;
+  gap: 4.5rem;
+  align-items: start;
+}
+
+.about-text h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 2rem;
+}
+
+.about-text h2 .accent {
+  color: var(--accent-warm);
+}
+
+.about-text p {
+  color: var(--text-secondary);
+  margin-bottom: 1.3rem;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.about-text p strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.about-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+
+.stat-card {
+  padding: 1.5rem 1.3rem;
+  border: 2px solid var(--bg-elevated);
+  background: rgba(13, 13, 13, 0.4);
+  transition: border-color 0.3s;
+}
+
+.stat-card:hover {
+  border-color: var(--accent);
+}
+
+.stat-number {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.2rem;
+  color: var(--accent);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+
+.about-aside {
+  position: relative;
+}
+
+.about-quote {
+  padding: 2rem 1.8rem 2rem 2.2rem;
+  border-left: 4px solid var(--accent-warm);
+  background: rgba(244, 162, 97, 0.05);
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.75;
+  color: var(--text-primary);
+  margin-bottom: 2rem;
+}
+
+.about-quote cite {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: normal;
+  letter-spacing: 0.1em;
+}
+
+.about-credentials {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 2;
+}
+
+.about-credentials li {
+  list-style: none;
+  padding-left: 1.2rem;
+  position: relative;
+}
+
+.about-credentials li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+}
+
+/* ============================================
+   SECTION: SERVICES
+   ============================================ */
+.section-offer {
+  padding: 6rem 1.5rem 6.5rem;
+  background: var(--bg-dark);
+  position: relative;
+}
+
+.section-offer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.offer-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.2rem;
+}
+
+.offer-sub {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-bottom: 3.5rem;
+  max-width: 600px;
+}
+
+.offer-bento {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 1.5rem;
+}
+
+.offer-card {
+  padding: 2.3rem 2rem 2.5rem 1.9rem;
+  border: 2px solid var(--bg-elevated);
+  background: rgba(26, 26, 26, 0.5);
+  transition: border-color 0.35s, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.offer-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.offer-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-4px);
+}
+
+.offer-card:hover::after {
+  transform: scaleX(1);
+}
+
+.offer-card.featured {
+  grid-column: span 2;
+  border-color: var(--accent);
+  background: rgba(230, 57, 70, 0.04);
+}
+
+.offer-card-number {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+  margin-bottom: 1.2rem;
+}
+
+.offer-card h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.9rem;
+  line-height: 1.2;
+}
+
+.offer-card p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.offer-card .price {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--accent-warm);
+  margin-top: 1.3rem;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  .offer-bento {
+    grid-template-columns: 1fr;
+  }
+  .offer-card.featured {
+    grid-column: span 1;
+  }
+}
+
+/* ============================================
+   SECTION: SOCIAL PROOF
+   ============================================ */
+.section-proof {
+  padding: 5rem 1.5rem;
+  background: var(--bg-deep);
+  position: relative;
+}
+
+.proof-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.proof-card {
+  padding: 2rem 1.8rem 2rem 2.2rem;
+  border: 2px solid var(--bg-elevated);
+  background: rgba(26, 26, 26, 0.3);
+  transition: border-color 0.3s;
+}
+
+.proof-card:hover {
+  border-color: rgba(244, 162, 97, 0.4);
+}
+
+.proof-card p {
+  font-size: 0.98rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 1.2rem;
+  font-style: italic;
+}
+
+.proof-card cite {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 768px) {
+  .proof-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   SECTION: WEBINAR
+   ============================================ */
+.section-webinar {
+  padding: 6rem 1.5rem;
+  background: var(--bg-mid);
+  position: relative;
+}
+
+.section-webinar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-warm), transparent);
+}
+
+.webinar-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.webinar-inner h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.5rem;
+}
+
+.webinar-inner h2 .accent {
+  color: var(--accent-warm);
+}
+
+.webinar-inner p {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-bottom: 1rem;
+  line-height: 1.7;
+}
+
+.webinar-details {
+  margin-top: 2rem;
+  margin-bottom: 2.5rem;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.webinar-detail {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.webinar-detail .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent-warm);
+  display: inline-block;
+}
+
+/* ============================================
+   SECTION: CONTACT
+   ============================================ */
+.section-contact {
+  padding: 7rem 1.5rem 4rem;
+  background: var(--bg-deep);
+  position: relative;
+}
+
+.section-contact::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.contact-inner {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.contact-inner h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.5rem;
+}
+
+.contact-inner h2 .accent {
+  color: var(--accent);
+  text-shadow: 0 0 25px rgba(230, 57, 70, 0.3);
+}
+
+.contact-inner > p {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-bottom: 2.5rem;
+  line-height: 1.7;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.3rem;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.form-group input,
+.form-group textarea {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 0.85rem 1rem;
+  background: var(--bg-mid);
+  border: 2px solid var(--bg-elevated);
+  color: var(--text-primary);
+  transition: border-color 0.25s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.form-submit-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.form-submit-row .note {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.form-success {
+  display: none;
+  padding: 1.5rem;
+  border: 2px solid var(--accent);
+  background: rgba(230, 57, 70, 0.06);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-align: center;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.footer {
+  padding: 3rem 1.5rem 2rem;
+  background: var(--bg-deep);
+  border-top: 1px solid var(--bg-elevated);
+}
+
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-copy {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+}
+
+.footer-links a {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  transition: color 0.25s;
+}
+
+.footer-links a:hover {
+  color: var(--accent);
+}
+
+/* ============================================
+   SCROLL REVEAL ANIMATIONS
+   ============================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* ============================================
+   GLITCH ANIMATION
+   ============================================ */
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-3px, 2px); }
+  40% { transform: translate(3px, -2px); }
+  60% { transform: translate(-2px, -1px); }
+  80% { transform: translate(2px, 1px); }
+  100% { transform: translate(0); }
+}
+
+.glitch-hover:hover {
+  animation: glitch 0.3s ease;
+}
+
+/* ============================================
+   MARQUEE / TICKER
+   ============================================ */
+.ticker {
+  overflow: hidden;
+  padding: 1rem 0;
+  border-top: 1px solid var(--bg-elevated);
+  border-bottom: 1px solid var(--bg-elevated);
+  background: var(--bg-dark);
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 30s linear infinite;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+.ticker-item {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  color: var(--text-muted);
+  white-space: nowrap;
+  padding: 0 2.5rem;
+  letter-spacing: -0.02em;
+}
+
+.ticker-item .sep {
+  color: var(--accent);
+  margin-left: 2.5rem;
+}
+
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ============================================
+   BACK TO TOP
+   ============================================ */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 44px;
+  height: 44px;
+  background: var(--accent);
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: opacity 0.3s, visibility 0.3s, transform 0.3s, background 0.2s;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  background: var(--accent-hot);
+}
+
+.back-to-top svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================
+   SKIP LINK (Accessibility)
+   ============================================ */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  background: var(--accent);
+  color: var(--text-primary);
+  padding: 0.8rem 1.5rem;
+  z-index: 10001;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* ============================================
+   SCROLL PROGRESS BAR
+   ============================================ */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--accent), var(--accent-hot), var(--accent-warm));
+  z-index: 1001;
+  pointer-events: none;
+}
+
+/* ============================================
+   SECTION: FAQ
+   ============================================ */
+.section-faq {
+  padding: 6rem 1.5rem 6.5rem;
+  background: var(--bg-mid);
+  position: relative;
+}
+
+.section-faq::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-warm), transparent);
+}
+
+.faq-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 760px;
+}
+
+.faq-grid details {
+  border: 2px solid var(--bg-elevated);
+  background: rgba(26, 26, 26, 0.4);
+  transition: border-color 0.3s;
+}
+
+.faq-grid details[open] {
+  border-color: var(--accent);
+}
+
+.faq-grid summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem;
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  transition: color 0.2s;
+}
+
+.faq-grid summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-grid summary::after {
+  content: '+';
+  color: var(--accent);
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  font-weight: 400;
+  transition: transform 0.3s;
+}
+
+.faq-grid details[open] summary::after {
+  content: '−';
+}
+
+.faq-grid summary:hover {
+  color: var(--accent);
+}
+
+.faq-grid p {
+  padding: 0 1.2rem 1.2rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+/* ============================================
+   RESPONSIVE FINE-TUNING
+   ============================================ */
+@media (max-width: 480px) {
+  html { font-size: 16px; }
+  .hero-content { margin-left: 0; }
+  .hero-h1 { font-size: 2.4rem; }
+  .hero-ctas { flex-direction: column; align-items: stretch; }
+  .btn-primary, .btn-ghost { text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- Skip Link -->
+<a href="#main" class="skip-link">Skip to content</a>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
+<!-- Loader -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-bar"></div>
+</div>
+
+<!-- Navigation -->
+<nav class="nav" id="nav" role="navigation" aria-label="Main navigation">
+  <a href="/en/" class="nav-logo" aria-label="Piotr Chmielewski homepage">
+    <span>Piotr<br>Chmielewski</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#problem">Problem</a></li>
+    <li><a href="#ebook">Ebook</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#offer">Services</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="../" class="nav-lang" aria-label="Przełącz na polski">PL</a>
+  <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu" role="dialog" aria-label="Mobile menu">
+  <a href="#problem" class="mobile-menu-link">Problem</a>
+  <a href="#ebook" class="mobile-menu-link">Ebook</a>
+  <a href="#about" class="mobile-menu-link">About</a>
+  <a href="#offer" class="mobile-menu-link">Services</a>
+  <a href="#faq" class="mobile-menu-link">FAQ</a>
+  <a href="#contact" class="mobile-menu-link">Contact</a>
+</div>
+
+<!-- Main Content -->
+<main id="main">
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-grid-bg" aria-hidden="true"></div>
+    <div class="hero-noise" aria-hidden="true"></div>
+    <div class="hero-content">
+      <div class="hero-tag reveal">Piotr Chmielewski — AI Implementation for Small Businesses, UK</div>
+      <h1 class="hero-h1 reveal reveal-delay-1">
+        You're 40+<br>and still <span class="accent">collecting courses</span><br>instead of <span class="accent-warm">building a business?</span>
+      </h1>
+      <p class="hero-sub reveal reveal-delay-2">
+        You work hard, scroll through another training at night, and nothing changes. <strong>Zero results.</strong> It's time to fix that. No fluff. Just action.
+      </p>
+      <div class="hero-ctas reveal reveal-delay-3">
+        <a href="#ebook" class="btn-primary glitch-hover"><span>Get the free ebook</span></a>
+        <a href="#contact" class="btn-ghost">Book a 15-min call</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span class="ticker-item">AI FOR REAL PEOPLE <span class="sep">/</span></span>
+      <span class="ticker-item">STOP COLLECTING — START DOING <span class="sep">/</span></span>
+      <span class="ticker-item">UK-BASED AI IMPLEMENTATION <span class="sep">/</span></span>
+      <span class="ticker-item">ZERO BULLSH*T <span class="sep">/</span></span>
+      <span class="ticker-item">ACTION > MOTIVATION <span class="sep">/</span></span>
+      <span class="ticker-item">FIRST STEP OR GET LOST <span class="sep">/</span></span>
+      <!-- duplicate for seamless loop -->
+      <span class="ticker-item">AI FOR REAL PEOPLE <span class="sep">/</span></span>
+      <span class="ticker-item">STOP COLLECTING — START DOING <span class="sep">/</span></span>
+      <span class="ticker-item">UK-BASED AI IMPLEMENTATION <span class="sep">/</span></span>
+      <span class="ticker-item">ZERO BULLSH*T <span class="sep">/</span></span>
+      <span class="ticker-item">ACTION > MOTIVATION <span class="sep">/</span></span>
+      <span class="ticker-item">FIRST STEP OR GET LOST <span class="sep">/</span></span>
+    </div>
+  </div>
+
+  <!-- PROBLEM -->
+  <section class="section-problem" id="problem">
+    <div class="container-narrow">
+      <div class="section-tag reveal">Sound familiar?</div>
+      <h2 class="problem-heading reveal reveal-delay-1">
+        You've been grinding for years.<br>Doing <span class="accent">the same thing</span> as yesterday.
+      </h2>
+      <ul class="problem-list">
+        <li class="reveal reveal-delay-2">You bought 5 online courses. Finished none of them.</li>
+        <li class="reveal reveal-delay-2">You read about AI every day but have no idea where to start.</li>
+        <li class="reveal reveal-delay-3">You dream about your own business but "don't have time".</li>
+        <li class="reveal reveal-delay-3">You earn decent money but feel completely stuck.</li>
+        <li class="reveal reveal-delay-4">You're afraid AI will take your job — and you're right, if you do nothing.</li>
+      </ul>
+      <div class="problem-callout reveal reveal-delay-4">
+        <span class="highlight">The truth is simple:</span> AI won't take your job. Your inaction will. You don't need another course. You need someone who'll tell you the truth and show you the first step.
+      </div>
+    </div>
+  </section>
+
+  <!-- EBOOK -->
+  <section class="section-ebook" id="ebook">
+    <div class="container-wide">
+      <div class="section-tag reveal">Free ebook</div>
+      <div class="ebook-grid">
+        <div class="ebook-visual reveal reveal-delay-1">
+          <div class="ebook-cover" role="img" aria-label="Ebook cover: First Step or Get Lost">
+            <div class="ebook-cover-bg"></div>
+            <div class="ebook-cover-lines" aria-hidden="true"></div>
+            <div class="ebook-cover-content">
+              <div class="ebook-cover-label">Ebook / Piotr Chmielewski</div>
+              <div class="ebook-cover-title">
+                First Step<br>or <span class="accent">Get Lost</span>
+              </div>
+              <div class="ebook-cover-author">piotrchmielewski.com — 2025</div>
+            </div>
+          </div>
+          <div class="ebook-shadow" aria-hidden="true"></div>
+        </div>
+        <div class="ebook-info">
+          <h2 class="reveal">Stop collecting knowledge.<br><span class="accent">Start selling it.</span></h2>
+          <p class="ebook-desc reveal reveal-delay-1">
+            This ebook isn't another motivational fluff piece. It's a brutally honest playbook for anyone who wants to use AI to build something real. No waffle. No guru nonsense.
+          </p>
+          <ul class="ebook-features reveal reveal-delay-2">
+            <li>Practical AI tools that work RIGHT NOW</li>
+            <li>An action plan — not "inspiration", actual steps to take</li>
+            <li>Real-world examples from UK small businesses, not Silicon Valley</li>
+            <li>Plain English, no jargon, for regular people</li>
+          </ul>
+          <a href="#contact" class="btn-primary glitch-hover reveal reveal-delay-3"><span>Get the free ebook</span></a>
+
+          <div class="ebook-preview reveal reveal-delay-4">
+            <div class="ebook-preview-header">What's inside:</div>
+            <div class="ebook-preview-body">
+              <span class="result">→ Chapter 1: Why 90% of courses are a waste of time</span><br>
+              <span class="result">→ Chapter 2: AI in 15 minutes — no code, no bullsh*t</span><br>
+              <span class="result">→ Chapter 3: Your first client in 30 days</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section-about" id="about">
+    <div class="container-wide">
+      <div class="section-tag reveal">About me</div>
+      <div class="about-grid">
+        <div class="about-text">
+          <h2 class="reveal">I'm not a guru.<br>I'm <span class="accent">someone who's been through it.</span></h2>
+          <p class="reveal reveal-delay-1">
+            My name is <strong>Piotr Chmielewski</strong>. I'm based in the UK. For years I did the same thing you're doing — worked a job and dreamed about something more.
+          </p>
+          <p class="reveal reveal-delay-2">
+            Today I help business owners in the UK use AI to build real businesses. I don't sell dreams. I sell <strong>practical tools and a clear plan</strong>.
+          </p>
+          <p class="reveal reveal-delay-2">
+            I speak Polish and English. I understand UK business realities, the SME landscape, and the "what if it doesn't work" mentality. My approach is simple: either you do it, or you don't.
+          </p>
+          <div class="about-stats reveal reveal-delay-3">
+            <div class="stat-card">
+              <div class="stat-number">15+</div>
+              <div class="stat-label">Years in UK</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">PL/EN</div>
+              <div class="stat-label">Bilingual</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">AI</div>
+              <div class="stat-label">Specialisation</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">0%</div>
+              <div class="stat-label">Bullsh*t</div>
+            </div>
+          </div>
+        </div>
+        <div class="about-aside">
+          <div class="about-quote reveal reveal-delay-2">
+            "You don't need another pep talk. You need someone who'll look you in the eye and say: <strong>get off your arse or stop complaining.</strong>"
+            <cite>— Piotr Chmielewski</cite>
+          </div>
+          <ul class="about-credentials reveal reveal-delay-3">
+            <li>AI implementation for UK-based small businesses</li>
+            <li>Helping business owners put AI to work</li>
+            <li>Webinars and workshops (EN/PL)</li>
+            <li>Practitioner, not theorist</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="section-offer" id="offer">
+    <div class="container-wide">
+      <div class="section-tag reveal">What I can do for you</div>
+      <h2 class="offer-heading reveal reveal-delay-1">Three ways to <span style="color:var(--accent)">get moving</span></h2>
+      <p class="offer-sub reveal reveal-delay-1">I don't have 47 packages and 12 tiers. I have three things. Each one works. Pick yours.</p>
+      <div class="offer-bento">
+        <div class="offer-card featured reveal reveal-delay-2">
+          <div class="offer-card-number">01 / FREE</div>
+          <h3>Ebook: First Step or Get Lost</h3>
+          <p>A free guide to AI for business owners. No waffle, no jargon. Practical tools, clear plan. Download it, read it, take your first step — or stop complaining.</p>
+          <div class="price">PRICE: £0 — ZERO — NOTHING — FREE</div>
+        </div>
+        <div class="offer-card reveal reveal-delay-3">
+          <div class="offer-card-number">02 / LIVE</div>
+          <h3>Webinar: AI for Regular People</h3>
+          <p>45 minutes, live. I show you exactly how to use AI in your business. No code, no complexity. Live Q&A.</p>
+          <div class="price">DETAILS COMING SOON</div>
+        </div>
+        <div class="offer-card reveal reveal-delay-3">
+          <div class="offer-card-number">03 / 1:1</div>
+          <h3>Individual Consultation</h3>
+          <p>15 minutes free. Then a concrete plan tailored to your situation. No bullsh*t, no upsells.</p>
+          <div class="price">15 MIN INTRO — FREE</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOCIAL PROOF -->
+  <section class="section-proof" id="proof">
+    <div class="container-wide">
+      <div class="section-tag reveal">Sound familiar?</div>
+      <div class="proof-grid">
+        <div class="proof-card reveal reveal-delay-1">
+          <p>You run a renovation company. You spend 10 hours a week writing quotes by hand. What if AI drafted 80% of them — and you just hit send?</p>
+          <cite>— construction business owner, Birmingham</cite>
+        </div>
+        <div class="proof-card reveal reveal-delay-2">
+          <p>You've been working in a factory for 8 years. You know your trade inside out — but you've never sold anything online. One ebook later, you land your first paying client.</p>
+          <cite>— skilled worker turning knowledge into income</cite>
+        </div>
+        <div class="proof-card reveal reveal-delay-3">
+          <p>You own a beauty salon. You're great at what you do, but marketing feels like a foreign language. What if AI wrote your posts, answered enquiries, and booked clients while you work?</p>
+          <cite>— salon owner, London</cite>
+        </div>
+        <div class="proof-card reveal reveal-delay-4">
+          <p>You work in a warehouse by day and run a small side hustle selling custom phone cases on Etsy. AI handles your product descriptions, customer messages, and even spots trending designs. Your evenings are yours again.</p>
+          <cite>— warehouse worker + Etsy seller, Leeds</cite>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WEBINAR -->
+  <section class="section-webinar" id="webinar">
+    <div class="webinar-inner">
+      <div class="section-tag reveal">Webinar — join live</div>
+      <h2 class="reveal reveal-delay-1">AI for <span class="accent">regular people</span>. No code. No bullsh*t.</h2>
+      <p class="reveal reveal-delay-2">
+        You don't need to be a programmer to use AI. In this webinar I'll show you exactly, step by step, how to use AI tools in your daily work and in building your business.
+      </p>
+      <p class="reveal reveal-delay-2">
+        In plain English. Translated into human. For people who do things, not for those who just watch.
+      </p>
+      <div class="webinar-details reveal reveal-delay-3">
+        <span class="webinar-detail"><span class="dot"></span> 45 minutes live</span>
+        <span class="webinar-detail"><span class="dot"></span> Q&A session</span>
+        <span class="webinar-detail"><span class="dot"></span> Recording available after</span>
+        <span class="webinar-detail"><span class="dot"></span> In English</span>
+      </div>
+      <a href="#contact" class="btn-primary glitch-hover reveal reveal-delay-3"><span>Join the webinar</span></a>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section-faq" id="faq">
+    <div class="container-wide">
+      <div class="section-tag reveal">Frequently asked questions</div>
+      <h2 class="problem-heading reveal reveal-delay-1">Before you ask — <span class="accent">I'll answer.</span></h2>
+      <div class="faq-grid">
+        <details class="reveal reveal-delay-2">
+          <summary>Is this for me if I know nothing about AI?</summary>
+          <p>Yes. First we sort out the business logic. Tools come later, once you know why you're using them. You don't need to be technical — you need to understand the outcome.</p>
+        </details>
+        <details class="reveal reveal-delay-2">
+          <summary>Do I need to have a business already?</summary>
+          <p>No. You just need experience, a specific problem to solve, and willingness to make the first move. Businesses are built in practice, not in notebooks.</p>
+        </details>
+        <details class="reveal reveal-delay-3">
+          <summary>How much time do I realistically need?</summary>
+          <p>If you can't find 3-5 hours a week, you won't build anything meaningful. But you don't need a free month. You need a system and to cut the noise.</p>
+        </details>
+        <details class="reveal reveal-delay-3">
+          <summary>Is the tone on this site the same when we work together?</summary>
+          <p>Yes. No theatre and no sugarcoating. Respectful, but direct. If you prefer a gentle approach — this isn't the right place.</p>
+        </details>
+        <details class="reveal reveal-delay-4">
+          <summary>What happens after I submit the form?</summary>
+          <p>Your enquiry gets saved. I respond within 24 hours. If you write "ebook" — you'll get a download link. If you want to chat — we'll schedule a 15-minute call.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="section-contact" id="contact">
+    <div class="contact-inner">
+      <div class="section-tag reveal">Contact</div>
+      <h2 class="reveal reveal-delay-1">Stop overthinking,<br><span class="accent">start doing.</span></h2>
+      <p class="reveal reveal-delay-2">
+        Get in touch. We'll talk. No obligations. If I can help — I'll tell you how. If I can't — I'll tell you that too. I don't waste my time or yours.
+      </p>
+      <form class="contact-form reveal reveal-delay-3" id="contactForm" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="What's your name?" required autocomplete="given-name">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="message">Message (optional)</label>
+          <textarea id="message" name="message" placeholder="Tell me what you need help with, or just write 'ebook' to get the free ebook."></textarea>
+        </div>
+        <div class="form-submit-row">
+          <button type="submit" class="btn-primary glitch-hover"><span>Send message</span></button>
+          <span class="note">I respond within 24h.</span>
+        </div>
+      </form>
+      <div class="form-success" id="formSuccess">
+        Done. Check your inbox. If you don't see it — check spam. Then get off your arse and get to work.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Back to Top -->
+<button class="back-to-top" id="backToTop" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<!-- Footer -->
+<footer class="footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-copy">&copy; 2025 Piotr Chmielewski. All rights reserved.</div>
+    <ul class="footer-links">
+      <li><a href="mailto:contact@piotrchmielewski.com">Email</a></li>
+      <li><a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+      <li><a href="/">Wersja polska</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+/* ============================================
+   LOADER
+   ============================================ */
+(function() {
+  const loader = document.getElementById('loader');
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      loader.classList.add('hidden');
+      setTimeout(function() { loader.style.display = 'none'; }, 400);
+    }, 300);
+  });
+})();
+
+/* ============================================
+   NAV HIDE/SHOW ON SCROLL
+   ============================================ */
+(function() {
+  var nav = document.getElementById('nav');
+  var lastScrollY = 0;
+  var ticking = false;
+
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(function() {
+        var currentScrollY = window.scrollY;
+        if (currentScrollY > lastScrollY && currentScrollY > 100) {
+          nav.classList.add('nav-hidden');
+        } else {
+          nav.classList.remove('nav-hidden');
+        }
+        lastScrollY = currentScrollY;
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+})();
+
+/* ============================================
+   MOBILE MENU
+   ============================================ */
+(function() {
+  var burger = document.getElementById('navBurger');
+  var mobileMenu = document.getElementById('mobileMenu');
+  var menuLinks = mobileMenu.querySelectorAll('a');
+
+  function toggleMenu() {
+    var isOpen = mobileMenu.classList.toggle('open');
+    burger.classList.toggle('open');
+    burger.setAttribute('aria-expanded', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  }
+
+  burger.addEventListener('click', toggleMenu);
+
+  menuLinks.forEach(function(link) {
+    link.addEventListener('click', function() {
+      if (mobileMenu.classList.contains('open')) {
+        toggleMenu();
+      }
+    });
+  });
+})();
+
+/* ============================================
+   SCROLL REVEAL
+   ============================================ */
+(function() {
+  var reveals = document.querySelectorAll('.reveal');
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.12,
+    rootMargin: '0px 0px -40px 0px'
+  });
+
+  reveals.forEach(function(el) {
+    observer.observe(el);
+  });
+})();
+
+/* ============================================
+   BACK TO TOP
+   ============================================ */
+(function() {
+  var btn = document.getElementById('backToTop');
+
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 600) {
+      btn.classList.add('visible');
+    } else {
+      btn.classList.remove('visible');
+    }
+  });
+
+  btn.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+
+/* ============================================
+   SCROLL PROGRESS BAR
+   ============================================ */
+(function() {
+  var bar = document.getElementById('scrollProgress');
+  if (!bar) return;
+  window.addEventListener('scroll', function() {
+    var scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    var ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+    bar.style.transform = 'scaleX(' + Math.min(Math.max(ratio, 0), 1) + ')';
+  }, { passive: true });
+})();
+
+/* ============================================
+   FORM HANDLING (with localStorage)
+   ============================================ */
+(function() {
+  var form = document.getElementById('contactForm');
+  var success = document.getElementById('formSuccess');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var nameEl = document.getElementById('name');
+    var emailEl = document.getElementById('email');
+    var messageEl = document.getElementById('message');
+    var valid = true;
+
+    if (!nameEl.value.trim()) {
+      nameEl.style.borderColor = 'var(--accent)';
+      valid = false;
+    } else {
+      nameEl.style.borderColor = '';
+    }
+
+    if (!emailEl.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
+      emailEl.style.borderColor = 'var(--accent)';
+      valid = false;
+    } else {
+      emailEl.style.borderColor = '';
+    }
+
+    if (valid) {
+      var submission = {
+        name: nameEl.value.trim(),
+        email: emailEl.value.trim(),
+        message: messageEl.value.trim(),
+        date: new Date().toISOString()
+      };
+      var saved = JSON.parse(localStorage.getItem('pc_contacts') || '[]');
+      saved.push(submission);
+      localStorage.setItem('pc_contacts', JSON.stringify(saved));
+
+      form.style.display = 'none';
+      success.style.display = 'block';
+    }
+  });
+})();
+
+/* ============================================
+   SMOOTH SCROLL FOR ANCHOR LINKS
+   ============================================ */
+(function() {
+  document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+    anchor.addEventListener('click', function(e) {
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        var offsetTop = target.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+      }
+    });
+  });
+})();
+
+/* ============================================
+   TERMINAL CURSOR BLINK
+   ============================================ */
+(function() {
+  var cursor = document.querySelector('.blink-cursor');
+  if (!cursor) return;
+  setInterval(function() {
+    cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
+  }, 530);
+})();
+
+/* ============================================
+   PARALLAX SUBTLE EFFECT ON HERO
+   ============================================ */
+(function() {
+  var heroContent = document.querySelector('.hero-content');
+  if (!heroContent || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  window.addEventListener('scroll', function() {
+    var scrollY = window.scrollY;
+    if (scrollY < window.innerHeight) {
+      var fadeStart = window.innerHeight * 0.35;
+      var fadeEnd = window.innerHeight * 0.95;
+      var opacity = scrollY < fadeStart ? 1 : 1 - (scrollY - fadeStart) / (fadeEnd - fadeStart);
+      heroContent.style.transform = 'translateY(' + (scrollY * 0.1) + 'px)';
+      heroContent.style.opacity = Math.max(0, opacity);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
