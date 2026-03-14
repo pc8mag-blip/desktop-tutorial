@@ -1268,8 +1268,8 @@ img {
    ============================================ */
 .reveal {
   opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(18px);
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .reveal.visible {
@@ -1277,10 +1277,19 @@ img {
   transform: translateY(0);
 }
 
-.reveal-delay-1 { transition-delay: 0.1s; }
-.reveal-delay-2 { transition-delay: 0.2s; }
-.reveal-delay-3 { transition-delay: 0.3s; }
-.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-1 { transition-delay: 0.06s; }
+.reveal-delay-2 { transition-delay: 0.12s; }
+.reveal-delay-3 { transition-delay: 0.18s; }
+.reveal-delay-4 { transition-delay: 0.24s; }
+
+/* Hero elements appear instantly on page load */
+.hero .reveal {
+  transition-duration: 0.25s;
+}
+.hero .reveal-delay-1 { transition-delay: 0.04s; }
+.hero .reveal-delay-2 { transition-delay: 0.08s; }
+.hero .reveal-delay-3 { transition-delay: 0.12s; }
+.hero .reveal-delay-4 { transition-delay: 0.16s; }
 
 /* ============================================
    GLITCH ANIMATION
@@ -1919,7 +1928,13 @@ img {
    SCROLL REVEAL
    ============================================ */
 (function() {
-  var reveals = document.querySelectorAll('.reveal');
+  // Hero elements reveal immediately on load (no waiting for scroll)
+  var heroReveals = document.querySelectorAll('.hero .reveal');
+  heroReveals.forEach(function(el) {
+    el.classList.add('visible');
+  });
+
+  var reveals = document.querySelectorAll('.reveal:not(.visible)');
 
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
@@ -1929,8 +1944,8 @@ img {
       }
     });
   }, {
-    threshold: 0.12,
-    rootMargin: '0px 0px -40px 0px'
+    threshold: 0.08,
+    rootMargin: '0px 0px -20px 0px'
   });
 
   reveals.forEach(function(el) {
