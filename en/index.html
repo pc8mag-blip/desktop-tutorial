@@ -2164,8 +2164,8 @@ img {
       requestAnimationFrame(function() {
         var scrollY = window.scrollY;
         if (scrollY < window.innerHeight) {
-          var fadeStart = window.innerHeight * 0.35;
-          var fadeEnd = window.innerHeight * 0.95;
+          var fadeStart = window.innerHeight * 0.55;
+          var fadeEnd = window.innerHeight * 1.2;
           var opacity = scrollY < fadeStart ? 1 : 1 - (scrollY - fadeStart) / (fadeEnd - fadeStart);
           heroContent.style.transform = 'translateY(' + (scrollY * 0.1) + 'px)';
           heroContent.style.opacity = Math.max(0, opacity);
