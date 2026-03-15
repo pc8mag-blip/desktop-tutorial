@@ -222,7 +222,7 @@ img {
   top: 0;
   right: -100%;
   width: 100%;
-  height: 100vh;
+  height: 100dvh;
   background: var(--bg-deep);
   z-index: 999;
   display: flex;
@@ -275,7 +275,7 @@ img {
    HERO SECTION
    ============================================ */
 .hero {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   padding: 8rem 1.5rem 4rem;
@@ -1658,7 +1658,7 @@ img {
               <div class="ebook-cover-title">
                 First Step<br>or Get the <span class="accent">F... Out</span>
               </div>
-              <div class="ebook-cover-author">piotrchmielewski.com — 2025</div>
+              <div class="ebook-cover-author">piotrchmielewski.com — 2026</div>
             </div>
           </div>
           <div class="ebook-shadow" aria-hidden="true"></div>
@@ -1899,7 +1899,7 @@ img {
 <!-- Footer -->
 <footer class="footer" role="contentinfo">
   <div class="footer-inner">
-    <div class="footer-copy">&copy; 2025 Piotr Chmielewski. All rights reserved.</div>
+    <div class="footer-copy">&copy; 2026 Piotr Chmielewski. All rights reserved.</div>
     <ul class="footer-links">
       <li><a href="mailto:kontakt@piotrchmielewski.com">Email</a></li>
       <li><a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
@@ -2040,7 +2040,14 @@ img {
     }
 
     if (valid) {
+      var submitBtn = form.querySelector('button[type="submit"]');
+      var originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Sending...</span>';
+
       var formData = new FormData(form);
+      var emailValue = emailEl.value.trim();
+      var nameValue = nameEl.value.trim();
 
       fetch('https://api.web3forms.com/submit', {
         method: 'POST',
@@ -2053,8 +2060,10 @@ img {
           fetch('/.netlify/functions/subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: emailEl.value.trim(), name: nameEl.value.trim() })
-          }).catch(function() {});
+            body: JSON.stringify({ email: emailValue, name: nameValue })
+          }).catch(function(err) {
+            console.warn('MailerLite subscription failed:', err);
+          });
 
           nameEl.value = '';
           emailEl.value = '';
@@ -2065,21 +2074,10 @@ img {
           alert('Something went wrong. Please try again.');
         }
       }).catch(function() {
-        var submission = {
-          name: nameEl.value.trim(),
-          email: emailEl.value.trim(),
-          message: messageEl.value.trim(),
-          date: new Date().toISOString()
-        };
-        var saved = JSON.parse(localStorage.getItem('pc_contacts') || '[]');
-        saved.push(submission);
-        localStorage.setItem('pc_contacts', JSON.stringify(saved));
-
-        nameEl.value = '';
-        emailEl.value = '';
-        messageEl.value = '';
-        success.style.display = 'block';
-        setTimeout(function() { success.style.display = 'none'; }, 5000);
+        alert('Connection error. Please check your internet and try again.');
+      }).finally(function() {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
       });
     }
   });
