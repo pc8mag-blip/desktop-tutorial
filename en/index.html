@@ -1853,7 +1853,11 @@ img {
       <p class="reveal reveal-delay-2">
         Drop me a message. We'll chat. No strings attached. If I can help — I'll tell you how. If I can't — I'll tell you that straight. I don't waste my time or yours.
       </p>
-      <form class="contact-form reveal reveal-delay-3" id="contactForm" name="contact-en" method="POST" data-netlify="true" novalidate>
+      <form class="contact-form reveal reveal-delay-3" id="contactForm" action="https://api.web3forms.com/submit" method="POST" novalidate>
+        <input type="hidden" name="access_key" value="f3274502-53c8-4312-9f51-7410fce7d621">
+        <input type="hidden" name="subject" value="New message from website (EN)">
+        <input type="hidden" name="from_name" value="piotrchmielewski.com">
+        <input type="checkbox" name="botcheck" class="hidden" style="display:none">
         <div class="form-row">
           <div class="form-group">
             <label for="name">Name</label>
@@ -2007,7 +2011,7 @@ img {
 
 
 /* ============================================
-   FORM HANDLING (Netlify Forms + localStorage backup)
+   FORM HANDLING (Web3Forms + localStorage backup)
    ============================================ */
 (function() {
   var form = document.getElementById('contactForm');
@@ -2038,12 +2042,13 @@ img {
     if (valid) {
       var formData = new FormData(form);
 
-      fetch('/en/', {
+      fetch('https://api.web3forms.com/submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(formData).toString()
+        body: formData
       }).then(function(response) {
-        if (response.ok) {
+        return response.json();
+      }).then(function(data) {
+        if (data.success) {
           nameEl.value = '';
           emailEl.value = '';
           messageEl.value = '';
