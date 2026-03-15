@@ -1,0 +1,5 @@
+# Language routing
+/en    /en/index.html    200
+/en/   /en/index.html    200
+/pl    /index.html        200
+/pl/   /index.html        200
