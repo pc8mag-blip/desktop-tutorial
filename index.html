@@ -2060,6 +2060,13 @@ img {
         return response.json();
       }).then(function(data) {
         if (data.success) {
+          // Add subscriber to MailerLite via Netlify Function
+          fetch('/.netlify/functions/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailEl.value.trim(), name: nameEl.value.trim() })
+          }).catch(function() {});
+
           nameEl.value = '';
           emailEl.value = '';
           messageEl.value = '';
