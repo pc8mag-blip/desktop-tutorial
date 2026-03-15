@@ -1853,10 +1853,8 @@ img {
       <p class="reveal reveal-delay-2">
         Drop me a message. We'll chat. No strings attached. If I can help — I'll tell you how. If I can't — I'll tell you that straight. I don't waste my time or yours.
       </p>
-      <form class="contact-form reveal reveal-delay-3" id="contactForm" action="https://api.web3forms.com/submit" method="POST" novalidate>
-        <input type="hidden" name="access_key" value="f3274502-53c8-4312-9f51-7410fce7d621">
-        <input type="hidden" name="subject" value="New message from website (EN)">
-        <input type="hidden" name="from_name" value="piotrchmielewski.com">
+      <form class="contact-form reveal reveal-delay-3" id="contactForm" novalidate>
+        <input type="hidden" name="lang" value="en">
         <input type="checkbox" name="botcheck" class="hidden" style="display:none">
         <div class="form-row">
           <div class="form-group">
@@ -2045,13 +2043,14 @@ img {
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span>Sending...</span>';
 
-      var formData = new FormData(form);
       var emailValue = emailEl.value.trim();
       var nameValue = nameEl.value.trim();
+      var messageValue = messageEl.value.trim();
 
-      fetch('https://api.web3forms.com/submit', {
+      fetch('/.netlify/functions/contact', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameValue, email: emailValue, message: messageValue, lang: 'en' })
       }).then(function(response) {
         return response.json();
       }).then(function(data) {
