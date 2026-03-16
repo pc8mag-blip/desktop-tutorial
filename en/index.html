@@ -48,7 +48,7 @@
   --accent-warm: #F4A261;
   --text-primary: #F1EDEE;
   --text-secondary: #8B8B8B;
-  --text-muted: #6B7280;
+  --text-muted: #9CA3AF;
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'DM Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -1557,6 +1557,12 @@ img {
   .btn-primary, .btn-ghost { text-align: center; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
+  .reveal { transition-duration: 0.01s !important; }
+  .hero .reveal { transition-duration: 0.01s !important; }
+}
+
 /* ============================================
    COOKIE CONSENT BANNER
    ============================================ */
@@ -1926,7 +1932,7 @@ img {
           <span class="note">I reply within 24 hours.</span>
         </div>
       </form>
-      <div class="form-success" id="formSuccess">
+      <div class="form-success" id="formSuccess" role="status" aria-live="polite">
         Done. Check your inbox. If you don't see the email — check spam. Then get off your arse and get to work.
       </div>
     </div>
@@ -1956,6 +1962,13 @@ img {
     </ul>
   </div>
 </footer>
+
+<!-- Cookie Consent Banner (must be before script to exist in DOM when JS runs) -->
+<div id="cookie-banner" class="cookie-banner" role="dialog" aria-label="Cookie consent">
+  <p>This site uses cookies (Google Analytics) to analyse traffic. Your data is anonymised. <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">Learn more</a>.</p>
+  <button class="cookie-btn cookie-btn-accept">Accept</button>
+  <button class="cookie-btn cookie-btn-reject">Decline</button>
+</div>
 
 <script>
 
@@ -2280,13 +2293,6 @@ img {
   }
 })();
 </script>
-
-<!-- Cookie Consent Banner -->
-<div id="cookie-banner" class="cookie-banner" role="dialog" aria-label="Cookie consent">
-  <p>This site uses cookies (Google Analytics) to analyse traffic. Your data is anonymised. <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">Learn more</a>.</p>
-  <button class="cookie-btn cookie-btn-accept">Accept</button>
-  <button class="cookie-btn cookie-btn-reject">Decline</button>
-</div>
 
 </body>
 </html>
