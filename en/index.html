@@ -11,7 +11,17 @@
 <meta property="og:description" content="Stop collecting knowledge. Start selling it. Free ebook for Poles in the UK.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="en_GB">
+<meta property="og:url" content="https://piotrchmielewski.com/en/">
+<meta property="og:image" content="https://piotrchmielewski.com/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Piotr Chmielewski — AI Consultant">
 <meta property="og:locale:alternate" content="pl_PL">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Piotr Chmielewski — First Step or Get the F... Out">
+<meta name="twitter:description" content="Stop collecting knowledge. Start selling it. Free ebook for Poles in the UK.">
+<meta name="twitter:image" content="https://piotrchmielewski.com/og-image.png">
 <link rel="alternate" hreflang="en" href="https://piotrchmielewski.com/en/">
 <link rel="alternate" hreflang="pl" href="https://piotrchmielewski.com/">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230D0D0D'/%3E%3Crect x='3' y='3' width='94' height='94' fill='none' stroke='%23E63946' stroke-width='6'/%3E%3Ctext x='50' y='72' font-family='monospace' font-size='68' font-weight='bold' fill='%23F1EDEE' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
@@ -1546,6 +1556,47 @@ img {
   .hero-ctas { flex-direction: column; align-items: stretch; }
   .btn-primary, .btn-ghost { text-align: center; }
 }
+
+/* ============================================
+   COOKIE CONSENT BANNER
+   ============================================ */
+.cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  background: var(--bg-elevated);
+  border-top: 1px solid rgba(230,57,70,0.3);
+  padding: 1rem 1.5rem;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.cookie-banner.visible { display: flex; }
+.cookie-banner p { max-width: 600px; line-height: 1.5; }
+.cookie-banner a { color: var(--accent); text-decoration: underline; }
+.cookie-btn {
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: opacity 0.2s;
+}
+.cookie-btn:hover { opacity: 0.85; }
+.cookie-btn-accept { background: var(--accent); color: #fff; }
+.cookie-btn-reject { background: var(--bg-mid); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.1); }
 </style>
 </head>
 <body>
@@ -2175,7 +2226,67 @@ img {
     }
   }, { passive: true });
 })();
+
+/* ============================================
+   COOKIE CONSENT + GOOGLE ANALYTICS
+   ============================================ */
+(function() {
+  var GA_ID = 'G-XXXXXXXXXX'; // TODO: Replace with your GA Measurement ID
+
+  function loadGA() {
+    if (document.getElementById('ga-script')) return;
+    var s = document.createElement('script');
+    s.id = 'ga-script';
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { window.dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', GA_ID, { anonymize_ip: true });
+  }
+
+  function removeGA() {
+    var s = document.getElementById('ga-script');
+    if (s) s.remove();
+    window['ga-disable-' + GA_ID] = true;
+    document.cookie = '_ga=; Max-Age=0; path=/; domain=.' + location.hostname;
+    document.cookie = '_ga_' + GA_ID.replace('G-','') + '=; Max-Age=0; path=/; domain=.' + location.hostname;
+  }
+
+  var banner = document.getElementById('cookie-banner');
+  var consent = localStorage.getItem('cookie-consent');
+
+  if (consent === 'accepted') {
+    loadGA();
+  } else if (consent === 'rejected') {
+    window['ga-disable-' + GA_ID] = true;
+  } else if (banner) {
+    banner.classList.add('visible');
+  }
+
+  if (banner) {
+    banner.querySelector('.cookie-btn-accept').addEventListener('click', function() {
+      localStorage.setItem('cookie-consent', 'accepted');
+      banner.classList.remove('visible');
+      loadGA();
+    });
+    banner.querySelector('.cookie-btn-reject').addEventListener('click', function() {
+      localStorage.setItem('cookie-consent', 'rejected');
+      banner.classList.remove('visible');
+      removeGA();
+    });
+  }
+})();
 </script>
+
+<!-- Cookie Consent Banner -->
+<div id="cookie-banner" class="cookie-banner" role="dialog" aria-label="Cookie consent">
+  <p>This site uses cookies (Google Analytics) to analyse traffic. Your data is anonymised. <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">Learn more</a>.</p>
+  <button class="cookie-btn cookie-btn-accept">Accept</button>
+  <button class="cookie-btn cookie-btn-reject">Decline</button>
+</div>
 
 </body>
 </html>

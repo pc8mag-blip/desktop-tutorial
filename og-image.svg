@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#0D0D0D"/>
+  <rect x="12" y="12" width="1176" height="606" fill="none" stroke="#E63946" stroke-width="4" rx="8"/>
+  <!-- Logo mark -->
+  <rect x="80" y="200" width="120" height="120" fill="none" stroke="#E63946" stroke-width="6" rx="4"/>
+  <text x="140" y="290" font-family="monospace" font-size="80" font-weight="bold" fill="#F1EDEE" text-anchor="middle">P</text>
+  <!-- Name -->
+  <text x="240" y="260" font-family="sans-serif" font-size="48" font-weight="700" fill="#F1EDEE">Piotr Chmielewski</text>
+  <text x="240" y="310" font-family="sans-serif" font-size="28" fill="#8B8B8B">AI Consultant</text>
+  <!-- Tagline -->
+  <text x="600" y="460" font-family="monospace" font-size="32" fill="#E63946" text-anchor="middle">Pierwszy Krok albo Spi...dalaj</text>
+  <!-- Domain -->
+  <text x="600" y="560" font-family="monospace" font-size="22" fill="#6B7280" text-anchor="middle">piotrchmielewski.com</text>
+</svg>
