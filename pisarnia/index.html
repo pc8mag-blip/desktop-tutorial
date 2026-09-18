@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pisarnia — modułowe narzędzie do pisania książek</title>
+<meta name="description" content="Wklejasz otagowane cegiełki (postać, scena, dialog, opis, wydarzenie), a narzędzie umieszcza je w odpowiednim miejscu struktury książki i scala w ciągły rękopis.">
+<style>
+:root{
+  --bg:#f6f4ef; --panel:#ffffff; --ink:#1d1b18; --muted:#6b6660; --line:#dcd7cf;
+  --accent:#8a3b2b; --accent-soft:#f3e3de; --ok:#2f7a4a; --warn:#b7791f; --bad:#b3261e;
+  --tag:#ece7dd; --radius:8px; --serif:Georgia,"Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#17171a; --panel:#1f1f24; --ink:#ebe7e0; --muted:#9a958d; --line:#33333a;
+    --accent:#d98b76; --accent-soft:#3a2521; --ok:#6fcf97; --warn:#e6b45c; --bad:#f28b82; --tag:#2b2b32; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+a{color:var(--accent)}
+button,select,input,textarea{font:inherit;color:inherit}
+button{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.small{padding:2px 8px;font-size:12px}
+button.danger{color:var(--bad)}
+input,select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px 8px;width:100%}
+textarea{resize:vertical;min-height:80px}
+label{display:block;font-size:12px;color:var(--muted);margin:8px 0 2px}
+h1,h2,h3,h4{margin:0 0 8px;line-height:1.25}
+h2{font-size:20px} h3{font-size:16px} h4{font-size:14px;color:var(--muted)}
+code{font-family:var(--mono);font-size:12.5px;background:var(--tag);padding:1px 5px;border-radius:4px}
+.hint{color:var(--muted);font-size:13px}
+header.top{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+header.top .brand{font-weight:700;letter-spacing:.3px}
+header.top input#projTitle{max-width:320px}
+header.top .spacer{flex:1}
+header.top .stats{font-size:12px;color:var(--muted);white-space:nowrap}
+nav.tabs{display:flex;flex-wrap:wrap;gap:4px;padding:8px 16px 0;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:49px;z-index:4}
+nav.tabs button{border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;background:transparent}
+nav.tabs button.active{background:var(--panel);border-color:var(--line);font-weight:600;color:var(--accent)}
+main{max-width:1240px;margin:0 auto;padding:16px}
+section.tab{display:none} section.tab.active{display:block}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cols.wide{grid-template-columns:2fr 1fr}
+@media (max-width:900px){.cols,.cols.wide{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row > *{flex:1} .row > .fixed{flex:0 0 auto}
+.badge{display:inline-block;background:var(--tag);border-radius:999px;padding:1px 8px;font-size:11.5px;margin-right:4px;white-space:nowrap}
+.badge.kind{background:var(--accent-soft);color:var(--accent)}
+.badge.ok{color:var(--ok)} .badge.warn{color:var(--warn)} .badge.bad{color:var(--bad)}
+.detected{margin-top:8px;font-size:13px;padding:8px 10px;border:1px dashed var(--line);border-radius:var(--radius);min-height:40px}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+/* structure */
+.chapter{border-left:4px solid var(--accent);margin-bottom:14px}
+.chapter .head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chapter .head input{max-width:380px}
+.scene{margin:8px 0 8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);background:color-mix(in srgb,var(--panel) 92%,var(--bg))}
+.scene .head{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.scene .head input{max-width:280px}
+.scene details{margin-top:6px} .scene summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
+.brick-row{display:flex;gap:6px;align-items:center;padding:4px 6px;border-top:1px dashed var(--line);font-size:13px}
+.brick-row:first-of-type{border-top:none}
+.brick-row .txt{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.brick-row .txt:hover{color:var(--accent)}
+.brick-row .meta{color:var(--muted);font-size:11.5px;white-space:nowrap}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:700px){.grid3{grid-template-columns:1fr}}
+/* manuscript */
+.ms-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.ms-tools input[type=text]{max-width:260px}
+.manuscript{max-width:760px;margin:0 auto;font-family:var(--serif);font-size:18px;line-height:1.75;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:40px 48px}
+@media (max-width:700px){.manuscript{padding:20px 16px;font-size:17px}}
+.manuscript h1{font-size:30px;text-align:center;margin:0 0 4px}
+.manuscript .author{text-align:center;color:var(--muted);font-family:var(--sans);font-size:14px;margin-bottom:40px}
+.manuscript h2{font-size:22px;margin:48px 0 6px;text-align:center}
+.manuscript h2 small{display:block;font-size:12px;color:var(--muted);font-family:var(--sans);font-weight:400;letter-spacing:2px;text-transform:uppercase}
+.manuscript .scene-mark{text-align:center;color:var(--muted);letter-spacing:6px;margin:24px 0}
+.manuscript .scene-info{font-family:var(--sans);font-size:12px;color:var(--muted);border-left:2px solid var(--line);padding:2px 8px;margin:12px 0}
+.manuscript .brick{position:relative;border-radius:4px;padding:0 6px;margin:0 -6px;cursor:text}
+.manuscript .brick p{margin:0 0 1em;text-indent:1.5em}
+.manuscript .brick p.dialog{text-indent:0}
+.manuscript.edit .brick{border:1px dashed transparent}
+.manuscript.edit .brick:hover{border-color:var(--accent);background:var(--accent-soft)}
+.manuscript .brick .tagline{display:none;font-family:var(--sans);font-size:11px;color:var(--muted)}
+.manuscript.edit .brick .tagline{display:block}
+.manuscript .empty{font-family:var(--sans);font-size:13px;color:var(--muted);font-style:italic;text-align:center;margin:12px 0}
+.manuscript .note{font-family:var(--sans);font-size:13px;background:var(--tag);padding:6px 10px;border-radius:4px;margin:8px 0}
+.manuscript .brick.dim{opacity:.25}
+.manuscript .hl{background:#ffe58a;color:#000}
+/* bible */
+.list{max-height:70vh;overflow:auto}
+.list .item{padding:6px 8px;border-bottom:1px solid var(--line);cursor:pointer}
+.list .item:hover,.list .item.sel{background:var(--accent-soft)}
+.list .item small{color:var(--muted)}
+.brick-full{border-top:1px solid var(--line);padding:8px 0;font-size:14px;white-space:pre-wrap}
+/* rules */
+.rules h3{margin-top:18px}
+.rules ul{padding-left:20px;margin:4px 0}
+.rules li{margin:3px 0}
+.diag li{margin:4px 0}
+.diag .lvl{font-weight:600;margin-right:6px}
+.diag .lvl.ok{color:var(--ok)} .diag .lvl.warn{color:var(--warn)} .diag .lvl.bad{color:var(--bad)}
+.bar{height:8px;background:var(--tag);border-radius:4px;overflow:hidden;display:flex}
+.bar span{display:block;height:100%}
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;padding:30px 12px;z-index:10;overflow:auto}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;width:min(880px,100%)}
+.modal textarea{min-height:240px;font-family:var(--serif);font-size:16px;line-height:1.6}
+@media print{
+  header.top,nav.tabs,.ms-tools,.toast,.modal-bg{display:none!important}
+  main{max-width:none;padding:0}
+  .manuscript{border:none;padding:0;font-size:12pt}
+  .manuscript .scene-info,.manuscript .tagline,.manuscript .note{display:none!important}
+  .manuscript h2{page-break-before:always}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span class="brand">✎ Pisarnia</span>
+  <input id="projTitle" placeholder="Tytuł książki" title="Tytuł książki">
+  <input id="projAuthor" placeholder="Autor" style="max-width:180px" title="Autor">
+  <span class="spacer"></span>
+  <span class="stats" id="stats"></span>
+  <span class="stats" id="saveState">zapisano</span>
+  <button id="btnExport" title="Zapisz cały projekt do pliku JSON (kopia zapasowa)">Eksport JSON</button>
+  <button id="btnImport" title="Wczytaj projekt z pliku JSON">Import JSON</button>
+  <input type="file" id="fileImport" accept="application/json" hidden>
+  <button id="btnNew" class="danger" title="Wyczyść i zacznij nowy projekt">Nowy projekt</button>
+</header>
+
+<nav class="tabs">
+  <button data-tab="wklej" class="active">1 · Wklej cegiełkę</button>
+  <button data-tab="struktura">2 · Struktura</button>
+  <button data-tab="rekopis">3 · Rękopis (czytanie)</button>
+  <button data-tab="biblia">4 · Biblia świata</button>
+  <button data-tab="zasady">5 · Zasady i diagnostyka</button>
+</nav>
+
+<main>
+
+<!-- ===================== WKLEJ ===================== -->
+<section class="tab active" id="tab-wklej">
+  <div class="cols">
+    <div class="card">
+      <h2>Wklej fragment</h2>
+      <p class="hint">Możesz zacząć tekst nagłówkiem z tagami (jedna lub kilka linii zaczynających się od <code>#</code>). Formularz obok wypełni się sam:</p>
+      <p class="hint"><code>#typ: scena #rozdział: 3 #scena: 2 #postać: Anna, Marek #pov: Anna #miejsce: dworzec #tagi: napięcie, zwrot</code></p>
+      <p class="hint">Typy: <code>scena</code> (proza/akcja), <code>dialog</code>, <code>opis</code>, <code>monolog</code>, <code>postać</code>, <code>miejsce</code>, <code>przedmiot</code>, <code>wątek</code>, <code>wydarzenie</code>, <code>notatka</code>, <code>pomysł</code>. Rozdział i scena mogą być numerem lub tytułem; <code>#scena: nowa</code> tworzy nową scenę. Nieistniejące rozdziały/sceny zostaną utworzone.</p>
+      <textarea id="pasteText" rows="16" placeholder="Wklej tu fragment…&#10;&#10;Przykład:&#10;#typ: dialog #rozdział: 1 #scena: 2 #postać: Anna, Marek&#10;— Spóźniłeś się — powiedziała Anna.&#10;— Pociąg — odparł Marek, nie patrząc jej w oczy."></textarea>
+      <div class="detected" id="pasteDetected">Wykryte tagi pojawią się tutaj.</div>
+    </div>
+    <div class="card">
+      <h2>Gdzie to trafi</h2>
+      <label>Typ cegiełki</label>
+      <select id="fKind"></select>
+      <label>Tytuł / etykieta (opcjonalnie)</label>
+      <input id="fTitle" placeholder="np. Kłótnia na dworcu">
+      <div class="row" id="placementRow">
+        <div><label>Rozdział</label><select id="fChapter"></select></div>
+        <div><label>Scena</label><select id="fScene"></select></div>
+        <div><label>Pozycja</label><select id="fPos"><option value="end">na końcu sceny</option><option value="start">na początku sceny</option></select></div>
+      </div>
+      <div id="bibleRow" style="display:none">
+        <label>Nazwa (postaci / miejsca / wątku)</label>
+        <input id="fName" placeholder="np. Anna Kowal">
+      </div>
+      <div class="row">
+        <div><label>Postacie w fragmencie (po przecinku)</label><input id="fChars" placeholder="Anna, Marek"></div>
+        <div><label>Punkt widzenia (POV)</label><input id="fPov" placeholder="Anna"></div>
+      </div>
+      <div class="row">
+        <div><label>Miejsce</label><input id="fPlace" placeholder="dworzec"></div>
+        <div><label>Tagi (po przecinku)</label><input id="fTags" placeholder="napięcie, zwrot akcji"></div>
+      </div>
+      <div class="row">
+        <div><label>Status</label><select id="fStatus"><option value="szkic">szkic</option><option value="redakcja">po redakcji</option><option value="gotowe">gotowe</option></select></div>
+        <div><label>Kiedy (dla wydarzeń / chronologii)</label><input id="fWhen" placeholder="np. dzień 3, wieczór / 1994-05"></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="primary" id="pasteSave">Zapisz i umieść</button>
+        <button id="pasteClear" class="fixed">Wyczyść</button>
+      </div>
+      <p class="hint" style="margin-top:10px">Tekst bez przypisanej sceny trafia do <b>Skrzynki</b> (nieprzypisane) i możesz go przenieść później w zakładce Struktura.</p>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Ostatnio dodane</h3>
+    <div id="recentList"></div>
+  </div>
+</section>
+
+<!-- ===================== STRUKTURA ===================== -->
+<section class="tab" id="tab-struktura">
+  <div class="row" style="margin-bottom:12px">
+    <div class="fixed"><button class="primary" id="btnAddChapter">+ Rozdział</button></div>
+    <div class="fixed"><button id="btnSkeleton" title="Tworzy 13 rozdziałów-beatów w 3 aktach; możesz je potem łączyć, zmieniać nazwy i usuwać">Szkielet 3 aktów</button></div>
+    <div class="fixed"><label style="display:inline">Pokaż karty scen <input type="checkbox" id="showSceneCards" style="width:auto"></label></div>
+    <div class="fixed"><label style="display:inline">Filtr (postać / tag / tekst) <input id="structFilter" placeholder="np. Anna" style="max-width:220px"></label></div>
+  </div>
+  <div id="inboxCard" class="card"></div>
+  <div id="chapters"></div>
+</section>
+
+<!-- ===================== RĘKOPIS ===================== -->
+<section class="tab" id="tab-rekopis">
+  <div class="ms-tools">
+    <label style="margin:0"><input type="checkbox" id="msEdit" style="width:auto"> tryb edycji (kliknij fragment)</label>
+    <label style="margin:0"><input type="checkbox" id="msScenes" checked style="width:auto"> znaczniki scen</label>
+    <label style="margin:0"><input type="checkbox" id="msInfo" style="width:auto"> karty scen (cel/konflikt)</label>
+    <label style="margin:0"><input type="checkbox" id="msNotes" style="width:auto"> notatki autorskie</label>
+    <input type="text" id="msFilter" placeholder="Filtr: postać / tag / słowo">
+    <button id="btnExportMd">Pobierz .md</button>
+    <button id="btnExportTxt">Pobierz .txt</button>
+    <button id="btnPrint">Drukuj / PDF</button>
+  </div>
+  <div class="manuscript" id="manuscript"></div>
+</section>
+
+<!-- ===================== BIBLIA ===================== -->
+<section class="tab" id="tab-biblia">
+  <div class="row" style="margin-bottom:10px">
+    <div class="fixed"><button class="sub active" data-sub="chars">Postacie</button></div>
+    <div class="fixed"><button class="sub" data-sub="places">Miejsca</button></div>
+    <div class="fixed"><button class="sub" data-sub="threads">Wątki i przedmioty</button></div>
+    <div class="fixed"><button class="sub" data-sub="timeline">Oś czasu</button></div>
+    <div class="fixed"><button class="sub" data-sub="notes">Notatki i pomysły</button></div>
+  </div>
+  <div id="bibleBody"></div>
+</section>
+
+<!-- ===================== ZASADY ===================== -->
+<section class="tab" id="tab-zasady">
+  <div class="cols">
+    <div class="card diag">
+      <h2>Diagnostyka projektu</h2>
+      <p class="hint">Automatyczne sprawdzenie rękopisu względem reguł poniżej. Odświeża się przy każdej zmianie.</p>
+      <div id="diag"></div>
+    </div>
+    <div class="card rules" id="rules"></div>
+  </div>
+</section>
+
+</main>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Edycja cegiełki</h3>
+    <div class="row">
+      <div><label>Typ</label><select id="mKind"></select></div>
+      <div><label>Tytuł</label><input id="mTitle"></div>
+      <div><label>Status</label><select id="mStatus"><option value="szkic">szkic</option><option value="redakcja">po redakcji</option><option value="gotowe">gotowe</option></select></div>
+    </div>
+    <div class="row" id="mPlacement">
+      <div><label>Rozdział</label><select id="mChapter"></select></div>
+      <div><label>Scena</label><select id="mScene"></select></div>
+    </div>
+    <div class="row">
+      <div><label>Nazwa (postać / miejsce / wątek)</label><input id="mName"></div>
+      <div><label>Postacie</label><input id="mChars"></div>
+      <div><label>POV</label><input id="mPov"></div>
+    </div>
+    <div class="row">
+      <div><label>Miejsce</label><input id="mPlace"></div>
+      <div><label>Tagi</label><input id="mTags"></div>
+      <div><label>Kiedy</label><input id="mWhen"></div>
+    </div>
+    <label>Tekst</label>
+    <textarea id="mText"></textarea>
+    <div class="row" style="margin-top:12px">
+      <div class="fixed"><button class="primary" id="mSave">Zapisz</button></div>
+      <div class="fixed"><button id="mCancel">Anuluj</button></div>
+      <div></div>
+      <div class="fixed"><button class="danger" id="mDelete">Usuń cegiełkę</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ============================ STAŁE ============================ */
+const LS_KEY = 'pisarnia.v1';
+const KINDS = {
+  scena:      {label:'Scena / proza (akcja, narracja)', group:'ms'},
+  dialog:     {label:'Dialog',                          group:'ms'},
+  opis:       {label:'Opis (miejsce, postać, nastrój)', group:'ms'},
+  monolog:    {label:'Monolog wewnętrzny / refleksja',  group:'ms'},
+  postac:     {label:'Postać (karta do Biblii)',        group:'bible'},
+  miejsce:    {label:'Miejsce (karta do Biblii)',       group:'bible'},
+  przedmiot:  {label:'Przedmiot / artefakt',           group:'bible'},
+  watek:      {label:'Wątek (motyw, linia fabularna)', group:'bible'},
+  wydarzenie: {label:'Wydarzenie (oś czasu / co się stało)', group:'timeline'},
+  notatka:    {label:'Notatka autorska',                group:'notes'},
+  pomysl:     {label:'Pomysł / szkic',                  group:'notes'},
+};
+const KIND_SYN = {proza:'scena',narracja:'scena',akcja:'scena',sytuacja:'scena',tekst:'scena',fragment:'scena',
+  rozmowa:'dialog',opis:'opis',deskrypcja:'opis',monolog:'monolog',refleksja:'monolog',mysli:'monolog',
+  postac:'postac',bohater:'postac',bohaterka:'postac',miejsce:'miejsce',lokacja:'miejsce',przedmiot:'przedmiot',artefakt:'przedmiot',
+  watek:'watek',motyw:'watek',wydarzenie:'wydarzenie',zdarzenie:'wydarzenie',fakt:'wydarzenie',notatka:'notatka',uwaga:'notatka',
+  pomysl:'pomysl',szkic:'pomysl',idea:'pomysl'};
+const KEYMAP = {typ:'kind',rodzaj:'kind',kind:'kind',type:'kind',
+  rozdzial:'chapter',rozdz:'chapter',r:'chapter',chapter:'chapter',
+  scena:'scene',s:'scene',scene:'scene',
+  postac:'chars',postaci:'chars',postacie:'chars',bohater:'chars',bohaterowie:'chars',
+  pov:'pov',narrator:'pov',perspektywa:'pov',
+  miejsce:'place',lokacja:'place',
+  tagi:'tags',tag:'tags',
+  tytul:'title',nazwa:'name',
+  status:'status',kiedy:'when',czas:'when',data:'when',
+  beat:'beat',punkt:'beat',pozycja:'pos'};
+const ACTS = {1:'Akt I — Ekspozycja', 2:'Akt II — Konfrontacja', 3:'Akt III — Rozwiązanie'};
+const BEATS = [
+  {k:'hak',act:1,n:'Hak / obraz otwarcia'},
+  {k:'swiat',act:1,n:'Świat przed zmianą (status quo)'},
+  {k:'incydent',act:1,n:'Incydent inicjujący'},
+  {k:'debata',act:1,n:'Debata / opór bohatera'},
+  {k:'prog1',act:1,n:'I punkt zwrotny — przekroczenie progu'},
+  {k:'proby',act:2,n:'Próby, sojusznicy, wrogowie'},
+  {k:'srodek',act:2,n:'Punkt środkowy — fałszywe zwycięstwo lub porażka'},
+  {k:'zaostrzenie',act:2,n:'Zaostrzenie — przeciwnicy się zbliżają'},
+  {k:'stracone',act:2,n:'Wszystko stracone'},
+  {k:'noc',act:2,n:'Ciemna noc duszy'},
+  {k:'prog2',act:3,n:'II punkt zwrotny — decyzja'},
+  {k:'kulminacja',act:3,n:'Kulminacja'},
+  {k:'rozwiazanie',act:3,n:'Rozwiązanie / obraz końcowy'},
+];
+const FILTER_WORDS = ['nagle','bardzo','naprawdę','właściwie','po prostu','zaczął','zaczęła','zaczęli','poczuł','poczuła','zobaczył','zobaczyła','usłyszał','usłyszała','pomyślał','pomyślała','wydawało się','wydaje się','trochę','jakby','dość','całkiem','zupełnie','absolutnie','nieco','w zasadzie','tak naprawdę'];
+
+/* ============================ NARZĘDZIA ============================ */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const words = t=>{t=(t||'').trim();return t?t.split(/\s+/).length:0;};
+const strip = s=>String(s||'').replace(/ł/g,'l').replace(/Ł/g,'L').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+const splitList = s=>String(s||'').split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+const fmt = n=>n.toLocaleString('pl-PL');
+let toastT; function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ============================ MODEL ============================ */
+function newProject(){
+  return {v:1,title:'',author:'',targetWords:80000,chapters:[],bricks:[],characters:[],places:[],created:new Date().toISOString()};
+}
+function load(){ try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null;}catch(e){return null;} }
+let P = load() || newProject();
+let saveT;
+function save(){
+  $('#saveState').textContent='zapisywanie…';
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{ try{localStorage.setItem(LS_KEY,JSON.stringify(P));$('#saveState').textContent='zapisano '+new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});}catch(e){$('#saveState').textContent='BŁĄD ZAPISU';toast('Nie udało się zapisać w przeglądarce: '+e.message);} },300);
+}
+function commit(){ save(); render(); }
+
+const chapterById = id=>P.chapters.find(c=>c.id===id);
+function sceneById(id){ for(const c of P.chapters){const s=c.scenes.find(s=>s.id===id); if(s) return {c,s};} return null; }
+const bricksInScene = sid=>P.bricks.filter(b=>b.sceneId===sid).sort((a,b)=>a.order-b.order);
+const msBricks = ()=>P.bricks.filter(b=>KINDS[b.kind]?.group==='ms');
+const inbox = ()=>P.bricks.filter(b=>KINDS[b.kind]?.group==='ms' && !sceneById(b.sceneId));
+
+function addChapter(title){
+  const n=P.chapters.length+1;
+  const c={id:uid(),title:title||('Rozdział '+n),act:n<=1?1:2,summary:'',scenes:[]};
+  P.chapters.push(c); return c;
+}
+function addScene(ch,title){
+  const s={id:uid(),title:title||('Scena '+(ch.scenes.length+1)),beat:'',pov:'',place:'',goal:'',conflict:'',outcome:'',shift:'',summary:''};
+  ch.scenes.push(s); return s;
+}
+function resolveChapter(ref,create=true){
+  if(!ref) return null;
+  const r=String(ref).trim();
+  const num=r.match(/^(?:rozdzia[łl]\s*)?(\d+)$/i);
+  if(num){ const n=+num[1]; if(n<1) return null;
+    while(create && P.chapters.length<n) addChapter();
+    return P.chapters[n-1]||null; }
+  const found=P.chapters.find(c=>strip(c.title)===strip(r));
+  if(found) return found;
+  return create?addChapter(r):null;
+}
+function resolveScene(ch,ref,create=true){
+  if(!ch||!ref) return null;
+  const r=String(ref).trim();
+  if(/^(nowa|new)$/i.test(r)) return create?addScene(ch):null;
+  const num=r.match(/^(?:scena\s*)?(\d+)$/i);
+  if(num){ const n=+num[1]; if(n<1) return null;
+    while(create && ch.scenes.length<n) addScene(ch);
+    return ch.scenes[n-1]||null; }
+  const found=ch.scenes.find(s=>strip(s.title)===strip(r));
+  if(found) return found;
+  return create?addScene(ch,r):null;
+}
+function ensureCharacter(name){
+  name=name.trim(); if(!name) return null;
+  let c=P.characters.find(x=>strip(x.name)===strip(name));
+  if(!c){ c={id:uid(),name,role:'',want:'',need:'',wound:'',arc:'',look:'',voice:'',notes:''}; P.characters.push(c); }
+  return c;
+}
+function ensurePlace(name){
+  name=name.trim(); if(!name) return null;
+  let p=P.places.find(x=>strip(x.name)===strip(name));
+  if(!p){ p={id:uid(),name,desc:'',mood:'',notes:''}; P.places.push(p); }
+  return p;
+}
+function placeBrick(b,sceneId,pos='end'){
+  b.sceneId=sceneId||null;
+  if(!sceneId){ b.order=Date.now(); return; }
+  const list=bricksInScene(sceneId).filter(x=>x.id!==b.id);
+  b.order = pos==='start' ? (list.length?list[0].order-1:0) : (list.length?list[list.length-1].order+1:0);
+}
+function normalizeKind(v){ const s=strip(v); if(KINDS[s]) return s; if(KIND_SYN[s]) return KIND_SYN[s]; for(const k in KIND_SYN) if(s.startsWith(k)) return KIND_SYN[k]; return null; }
+
+/* ============================ PARSER NAGŁÓWKA ============================ */
+function parseHeader(text){
+  const lines=text.split(/\r?\n/); const meta={}; let i=0;
+  for(;i<lines.length;i++){
+    const l=lines[i].trim();
+    if(l===''){ if(Object.keys(meta).length) continue; else break; }
+    if(!l.startsWith('#')) break;
+    const re=/#\s*([\p{L}]+)\s*[:=]\s*([^#]*)/gu; let m,any=false;
+    while((m=re.exec(l))){ const key=KEYMAP[strip(m[1])]; if(key){any=true; meta[key]=m[2].trim().replace(/[,;\s]+$/,'');} }
+    if(!any) break;
+  }
+  return {meta, body: lines.slice(i).join('\n').trim()};
+}
+
+/* ============================ FORMULARZ WKLEJANIA ============================ */
+function fillKindSelect(sel,val){
+  sel.innerHTML=Object.entries(KINDS).map(([k,v])=>`<option value="${k}">${esc(v.label)}</option>`).join('');
+  if(val) sel.value=val;
+}
+function fillChapterSelect(sel,val,allowNew=true){
+  sel.innerHTML=`<option value="">— Skrzynka (nieprzypisane)</option>`+
+    P.chapters.map((c,i)=>`<option value="${c.id}">${i+1}. ${esc(c.title)}</option>`).join('')+
+    (allowNew?`<option value="__new">+ nowy rozdział</option>`:'');
+  sel.value=val||'';
+  if(sel.value!==(val||'')) sel.value='';
+}
+function fillSceneSelect(sel,chId,val,allowNew=true){
+  const ch=chapterById(chId);
+  if(!ch||chId==='__new'){ sel.innerHTML=chId==='__new'?`<option value="__new">+ nowa scena</option>`:`<option value="">—</option>`; return; }
+  sel.innerHTML=`<option value="">— (bez sceny → Skrzynka)</option>`+
+    ch.scenes.map((s,i)=>`<option value="${s.id}">${i+1}. ${esc(s.title)}${s.beat?' · '+esc(beatName(s.beat)):''}</option>`).join('')+
+    (allowNew?`<option value="__new">+ nowa scena</option>`:'');
+  sel.value=val||''; if(sel.value!==(val||'')) sel.value='';
+}
+const beatName = k=>BEATS.find(b=>b.k===k)?.n||'';
+
+function syncPasteFormVisibility(){
+  const g=KINDS[$('#fKind').value]?.group;
+  $('#placementRow').style.display = g==='ms' ? '' : 'none';
+  $('#bibleRow').style.display = (g==='bible') ? '' : 'none';
+}
+function onPasteInput(){
+  const {meta,body}=parseHeader($('#pasteText').value);
+  const det=[];
+  if(meta.kind){ const k=normalizeKind(meta.kind); if(k){$('#fKind').value=k;det.push('typ: '+KINDS[k].label);} else det.push('typ nieznany: '+meta.kind); }
+  if(meta.chapter){
+    const ch=resolveChapter(meta.chapter,false);
+    if(ch){ fillChapterSelect($('#fChapter'),ch.id); det.push('rozdział: '+ch.title);
+      fillSceneSelect($('#fScene'),ch.id,'');
+      if(meta.scene){ const sc=resolveScene(ch,meta.scene,false); if(sc){ $('#fScene').value=sc.id; det.push('scena: '+sc.title);} else det.push('scena: '+meta.scene+' (zostanie utworzona)'); }
+    } else { det.push('rozdział: '+meta.chapter+' (zostanie utworzony)'+(meta.scene?', scena: '+meta.scene+' (zostanie utworzona)':'')); $('#fChapter').dataset.pending=meta.chapter; $('#fScene').dataset.pending=meta.scene||''; }
+  } else { delete $('#fChapter').dataset.pending; delete $('#fScene').dataset.pending; }
+  if(meta.title){$('#fTitle').value=meta.title;det.push('tytuł: '+meta.title);}
+  if(meta.name){$('#fName').value=meta.name;det.push('nazwa: '+meta.name);}
+  if(meta.chars){$('#fChars').value=meta.chars;det.push('postacie: '+meta.chars); if(KINDS[$('#fKind').value]?.group==='bible'&&!$('#fName').value) $('#fName').value=splitList(meta.chars)[0]||'';}
+  if(meta.pov){$('#fPov').value=meta.pov;det.push('POV: '+meta.pov);}
+  if(meta.place){$('#fPlace').value=meta.place;det.push('miejsce: '+meta.place);}
+  if(meta.tags){$('#fTags').value=meta.tags;det.push('tagi: '+meta.tags);}
+  if(meta.status){$('#fStatus').value=strip(meta.status).startsWith('got')?'gotowe':strip(meta.status).startsWith('red')?'redakcja':'szkic';}
+  if(meta.when){$('#fWhen').value=meta.when;det.push('kiedy: '+meta.when);}
+  if(meta.pos){$('#fPos').value=/pocz|start/i.test(meta.pos)?'start':'end';}
+  syncPasteFormVisibility();
+  const w=words(body);
+  $('#pasteDetected').innerHTML = (det.length?det.map(d=>`<span class="badge">${esc(d)}</span>`).join(' ')+'<br>':'<span class="hint">Brak nagłówka tagów — użyj formularza obok.</span><br>')+
+    `<span class="hint">${fmt(w)} słów · ${body.length} znaków</span><br><b>Trafi do:</b> ${esc(destinationText())}`;
+}
+function destinationText(){
+  const kind=$('#fKind').value, g=KINDS[kind]?.group;
+  if(g==='ms'){
+    const chSel=$('#fChapter'), scSel=$('#fScene');
+    if(chSel.dataset.pending) return `${KINDS[kind].label} → nowy rozdział „${chSel.dataset.pending}”`+(scSel.dataset.pending?` › scena „${scSel.dataset.pending}”`:' (bez sceny → Skrzynka)');
+    if(chSel.value==='__new') return KINDS[kind].label+' → nowy rozdział › nowa scena';
+    const ch=chapterById(chSel.value); if(!ch) return KINDS[kind].label+' → Skrzynka (nieprzypisane)';
+    if(scSel.value==='__new') return `${KINDS[kind].label} → ${ch.title} › nowa scena`;
+    const sc=sceneById(scSel.value)?.s; if(!sc) return `${KINDS[kind].label} → ${ch.title} (bez sceny → Skrzynka)`;
+    return `${KINDS[kind].label} → ${ch.title} › ${sc.title} (${$('#fPos').value==='start'?'na początku':'na końcu'}, ${bricksInScene(sc.id).length} fragm. w scenie)`;
+  }
+  if(g==='bible') return `${KINDS[kind].label} → Biblia › ${$('#fName').value.trim()||'[podaj nazwę]'}`;
+  if(g==='timeline') return 'Oś czasu'+($('#fWhen').value?' · '+$('#fWhen').value:'');
+  return 'Biblia › Notatki i pomysły';
+}
+function refreshDestination(){ const el=$('#pasteDetected'); const i=el.innerHTML.lastIndexOf('<b>Trafi do:</b>'); if(i<0) return onPasteInput(); el.innerHTML=el.innerHTML.slice(0,i)+`<b>Trafi do:</b> ${esc(destinationText())}`; }
+function savePaste(){
+  const {meta,body}=parseHeader($('#pasteText').value);
+  if(!body){ toast('Wklej najpierw jakiś tekst.'); return; }
+  const kind=$('#fKind').value; const group=KINDS[kind].group;
+  const b={id:uid(),kind,title:$('#fTitle').value.trim(),name:$('#fName').value.trim(),text:body,
+    chars:splitList($('#fChars').value),pov:$('#fPov').value.trim(),place:$('#fPlace').value.trim(),
+    tags:splitList($('#fTags').value),status:$('#fStatus').value,when:$('#fWhen').value.trim(),
+    sceneId:null,order:Date.now(),created:new Date().toISOString(),updated:new Date().toISOString()};
+  let where='Skrzynka (nieprzypisane)';
+  if(group==='ms'){
+    let ch=null, sc=null;
+    const chSel=$('#fChapter').value, scSel=$('#fScene').value;
+    if($('#fChapter').dataset.pending){ ch=resolveChapter($('#fChapter').dataset.pending,true); sc=$('#fScene').dataset.pending?resolveScene(ch,$('#fScene').dataset.pending,true):null; }
+    else if(chSel==='__new'){ ch=addChapter(); sc=addScene(ch); }
+    else if(chSel){ ch=chapterById(chSel); if(scSel==='__new') sc=addScene(ch); else if(scSel) sc=sceneById(scSel)?.s||null; }
+    if(ch && !sc && meta.scene) sc=resolveScene(ch,meta.scene,true);
+    if(sc){ P.bricks.push(b); placeBrick(b,sc.id,$('#fPos').value); where=ch.title+' › '+sc.title+' (pozycja '+(bricksInScene(sc.id).findIndex(x=>x.id===b.id)+1)+' z '+bricksInScene(sc.id).length+')'; }
+    if(b.pov && sc && !sc.pov) sc.pov=b.pov;
+    if(b.place && sc && !sc.place) sc.place=b.place;
+  } else if(group==='bible'){
+    if(!b.name){ b.name = b.title || b.chars[0] || ''; }
+    if(!b.name){ toast('Podaj nazwę postaci / miejsca / wątku.'); return; }
+    if(kind==='postac'){ ensureCharacter(b.name); where='Biblia › Postacie › '+b.name; }
+    else if(kind==='miejsce'){ ensurePlace(b.name); where='Biblia › Miejsca › '+b.name; }
+    else where='Biblia › Wątki i przedmioty › '+b.name;
+  } else if(group==='timeline'){ where='Biblia › Oś czasu'; }
+  else where='Biblia › Notatki i pomysły';
+  if(b.place) ensurePlace(b.place);
+  if(!P.bricks.includes(b)) P.bricks.push(b);
+  $('#pasteText').value='';
+  $('#fTitle').value=''; $('#fName').value=''; $('#fWhen').value=''; $('#fChars').value=''; $('#fTags').value='';
+  delete $('#fChapter').dataset.pending; delete $('#fScene').dataset.pending;
+  commit();
+  toast('Umieszczono: '+where);
+}
+function renderRecent(){
+  const list=[...P.bricks].sort((a,b)=>b.created.localeCompare(a.created)).slice(0,12);
+  $('#recentList').innerHTML = list.length? list.map(b=>brickRow(b,true)).join('') : '<p class="hint">Jeszcze nic nie dodano.</p>';
+}
+function brickLocation(b){
+  const g=KINDS[b.kind]?.group;
+  if(g==='ms'){ const r=sceneById(b.sceneId); return r? `${P.chapters.indexOf(r.c)+1}.${r.c.scenes.indexOf(r.s)+1} ${r.c.title} › ${r.s.title}` : 'Skrzynka'; }
+  if(g==='bible') return 'Biblia › '+(b.name||'?');
+  if(g==='timeline') return 'Oś czasu'+(b.when?' · '+b.when:'');
+  return 'Notatki';
+}
+function brickRow(b,withLoc=false){
+  const t=(b.title?b.title+' — ':'')+b.text.replace(/\s+/g,' ').slice(0,110);
+  return `<div class="brick-row" data-id="${b.id}">
+    <span class="badge kind">${esc(b.kind)}</span>
+    <span class="txt" data-edit="${b.id}" title="Kliknij, aby edytować">${esc(t)}</span>
+    <span class="meta">${withLoc?esc(brickLocation(b))+' · ':''}${fmt(words(b.text))} sł.${b.chars?.length?' · '+esc(b.chars.join(', ')):''}${b.tags?.length?' · #'+esc(b.tags.join(' #')):''}</span>
+  </div>`;
+}
+
+/* ============================ STRUKTURA ============================ */
+function matchFilter(b,q){
+  if(!q) return true; q=strip(q);
+  return strip(b.text).includes(q)||strip(b.title).includes(q)||(b.chars||[]).some(c=>strip(c).includes(q))||(b.tags||[]).some(t=>strip(t).includes(q))||strip(b.pov).includes(q)||strip(b.place).includes(q);
+}
+function moveSelect(b){
+  const opts=[`<option value="">przenieś do…</option>`,`<option value="__inbox">Skrzynka</option>`];
+  P.chapters.forEach((c,ci)=>{ opts.push(`<optgroup label="${ci+1}. ${esc(c.title)}">`); c.scenes.forEach((s,si)=>opts.push(`<option value="${s.id}" ${s.id===b.sceneId?'disabled':''}>${ci+1}.${si+1} ${esc(s.title)}</option>`)); opts.push(`<option value="__new:${c.id}">+ nowa scena w tym rozdziale</option></optgroup>`); });
+  return `<select class="small" data-move="${b.id}" style="width:auto;max-width:180px;font-size:12px;padding:2px 4px">${opts.join('')}</select>`;
+}
+function structBrick(b){
+  return `<div class="brick-row" data-id="${b.id}">
+    <span class="badge kind">${esc(b.kind)}</span>
+    <span class="txt" data-edit="${b.id}" title="Kliknij, aby edytować">${esc((b.title?b.title+' — ':'')+b.text.replace(/\s+/g,' ').slice(0,120))}</span>
+    <span class="meta">${fmt(words(b.text))} sł.${b.pov?' · POV '+esc(b.pov):''}${b.chars?.length?' · '+esc(b.chars.join(', ')):''}${b.tags?.length?' · #'+esc(b.tags.join(' #')):''} · <span class="badge ${b.status==='gotowe'?'ok':b.status==='redakcja'?'warn':''}">${esc(b.status)}</span></span>
+    <button class="small" data-up="${b.id}" title="wyżej">↑</button><button class="small" data-down="${b.id}" title="niżej">↓</button>
+    ${moveSelect(b)}
+  </div>`;
+}
+function renderStructure(){
+  const q=$('#structFilter').value.trim(); const showCards=$('#showSceneCards').checked;
+  const inb=inbox().filter(b=>matchFilter(b,q));
+  $('#inboxCard').innerHTML=`<h3>Skrzynka — nieprzypisane fragmenty (${inbox().length})</h3>`+(inb.length?inb.map(structBrick).join(''):'<p class="hint">Pusto. Wszystko ma swoje miejsce.</p>');
+  $('#chapters').innerHTML = P.chapters.length? P.chapters.map((c,ci)=>{
+    const chWords=c.scenes.reduce((a,s)=>a+bricksInScene(s.id).reduce((x,b)=>x+words(b.text),0),0);
+    return `<div class="card chapter" data-ch="${c.id}">
+      <div class="head">
+        <b>${ci+1}.</b>
+        <input data-chtitle="${c.id}" value="${esc(c.title)}" placeholder="Tytuł rozdziału">
+        <select data-chact="${c.id}" style="width:auto">${[1,2,3].map(a=>`<option value="${a}" ${c.act==a?'selected':''}>${ACTS[a]}</option>`).join('')}</select>
+        <span class="hint">${fmt(chWords)} słów · ${c.scenes.length} scen</span>
+        <button class="small" data-chup="${c.id}">↑</button><button class="small" data-chdown="${c.id}">↓</button>
+        <button class="small" data-addscene="${c.id}">+ scena</button>
+        <button class="small danger" data-delch="${c.id}">usuń</button>
+      </div>
+      <input data-chsum="${c.id}" value="${esc(c.summary)}" placeholder="Streszczenie rozdziału w 1–2 zdaniach (co się zmienia?)" style="margin-top:6px;font-size:13px">
+      ${c.scenes.map((s,si)=>{
+        const bl=bricksInScene(s.id).filter(b=>matchFilter(b,q)); const sw=bricksInScene(s.id).reduce((x,b)=>x+words(b.text),0);
+        const missing=[!s.goal&&'cel',!s.conflict&&'konflikt',!s.outcome&&'wynik',!s.pov&&'POV'].filter(Boolean);
+        return `<div class="scene" data-sc="${s.id}">
+          <div class="head">
+            <b>${ci+1}.${si+1}</b>
+            <input data-sctitle="${s.id}" value="${esc(s.title)}" placeholder="Tytuł sceny">
+            <select data-scbeat="${s.id}" style="width:auto;max-width:260px;font-size:12.5px"><option value="">— beat (punkt struktury)</option>${BEATS.map(b=>`<option value="${b.k}" ${s.beat===b.k?'selected':''}>${b.n}</option>`).join('')}</select>
+            <span class="hint">${fmt(sw)} sł.${s.pov?' · POV '+esc(s.pov):''}${missing.length?' · <span class="badge warn">brak: '+missing.join(', ')+'</span>':' · <span class="badge ok">karta pełna</span>'}</span>
+            <button class="small" data-scup="${s.id}">↑</button><button class="small" data-scdown="${s.id}">↓</button>
+            <button class="small danger" data-delsc="${s.id}">usuń</button>
+          </div>
+          <details ${showCards?'open':''}><summary>Karta sceny (cel · konflikt · wynik · zmiana)</summary>
+            <div class="grid3">
+              <div><label>POV (czyimi oczami)</label><input data-scf="pov" data-sc="${s.id}" value="${esc(s.pov)}"></div>
+              <div><label>Miejsce</label><input data-scf="place" data-sc="${s.id}" value="${esc(s.place)}"></div>
+              <div><label>Zmiana wartości (od → do)</label><input data-scf="shift" data-sc="${s.id}" value="${esc(s.shift)}" placeholder="np. nadzieja → strach"></div>
+              <div><label>Cel postaci w scenie</label><input data-scf="goal" data-sc="${s.id}" value="${esc(s.goal)}" placeholder="Czego chce? Konkretnie."></div>
+              <div><label>Konflikt / przeszkoda</label><input data-scf="conflict" data-sc="${s.id}" value="${esc(s.conflict)}" placeholder="Co lub kto stoi na drodze?"></div>
+              <div><label>Wynik (najlepiej: nie, i… / tak, ale…)</label><input data-scf="outcome" data-sc="${s.id}" value="${esc(s.outcome)}" placeholder="Jak scena się kończy?"></div>
+            </div>
+          </details>
+          <div style="margin-top:6px">${bl.length?bl.map(structBrick).join(''):'<p class="hint" style="margin:4px 6px">Brak fragmentów w tej scenie.</p>'}</div>
+        </div>`;}).join('')}
+    </div>`;}).join('') : '<p class="hint">Brak rozdziałów. Dodaj rozdział albo wygeneruj szkielet 3 aktów. Rozdziały tworzą się też automatycznie z tagów <code>#rozdział: N</code>.</p>';
+}
+function bindStructure(){
+  const root=$('#tab-struktura');
+  root.addEventListener('click',e=>{
+    const t=e.target.closest('button,[data-edit]'); if(!t) return;
+    const d=t.dataset;
+    if(d.edit) return openEdit(d.edit);
+    if(d.up||d.down){ const b=P.bricks.find(x=>x.id===(d.up||d.down)); const list=bricksInScene(b.sceneId); const i=list.indexOf(b); const j=d.up?i-1:i+1; if(j<0||j>=list.length) return; const o=list[j].order; list[j].order=b.order; b.order=o; if(list[j].order===b.order){list.forEach((x,k)=>x.order=k); const tmp=list[i].order; list[i].order=list[j].order; list[j].order=tmp;} return commit(); }
+    if(d.chup||d.chdown){ const i=P.chapters.findIndex(c=>c.id===(d.chup||d.chdown)); const j=d.chup?i-1:i+1; if(j<0||j>=P.chapters.length) return; [P.chapters[i],P.chapters[j]]=[P.chapters[j],P.chapters[i]]; return commit(); }
+    if(d.scup||d.scdown){ const r=sceneById(d.scup||d.scdown); const i=r.c.scenes.indexOf(r.s); const j=d.scup?i-1:i+1; if(j<0||j>=r.c.scenes.length) return; [r.c.scenes[i],r.c.scenes[j]]=[r.c.scenes[j],r.c.scenes[i]]; return commit(); }
+    if(d.addscene){ addScene(chapterById(d.addscene)); return commit(); }
+    if(d.delch){ const c=chapterById(d.delch); const n=c.scenes.reduce((a,s)=>a+bricksInScene(s.id).length,0); if(!confirm(`Usunąć rozdział „${c.title}”? ${n} fragmentów wróci do Skrzynki.`)) return; c.scenes.forEach(s=>bricksInScene(s.id).forEach(b=>b.sceneId=null)); P.chapters=P.chapters.filter(x=>x!==c); return commit(); }
+    if(d.delsc){ const r=sceneById(d.delsc); const n=bricksInScene(r.s.id).length; if(!confirm(`Usunąć scenę „${r.s.title}”? ${n} fragmentów wróci do Skrzynki.`)) return; bricksInScene(r.s.id).forEach(b=>b.sceneId=null); r.c.scenes=r.c.scenes.filter(x=>x!==r.s); return commit(); }
+  });
+  root.addEventListener('change',e=>{
+    const d=e.target.dataset;
+    if(d.move){ const b=P.bricks.find(x=>x.id===d.move); const v=e.target.value; if(!v) return;
+      if(v==='__inbox') placeBrick(b,null); else if(v.startsWith('__new:')){ const s=addScene(chapterById(v.slice(6))); placeBrick(b,s.id);} else placeBrick(b,v,'end'); return commit(); }
+    if(d.chact){ chapterById(d.chact).act=+e.target.value; return commit(); }
+    if(d.scbeat){ sceneById(d.scbeat).s.beat=e.target.value; return commit(); }
+  });
+  root.addEventListener('input',e=>{
+    const d=e.target.dataset;
+    if(d.chtitle){ chapterById(d.chtitle).title=e.target.value; save(); }
+    else if(d.chsum){ chapterById(d.chsum).summary=e.target.value; save(); }
+    else if(d.sctitle){ sceneById(d.sctitle).s.title=e.target.value; save(); }
+    else if(d.scf){ sceneById(d.sc).s[d.scf]=e.target.value; save(); }
+    else if(e.target.id==='structFilter') renderStructure();
+  });
+  root.addEventListener('focusout',e=>{ if(e.target.dataset.chtitle||e.target.dataset.sctitle||e.target.dataset.scf) render(); });
+  $('#showSceneCards').addEventListener('change',renderStructure);
+  $('#btnAddChapter').onclick=()=>{addChapter();commit();};
+  $('#btnSkeleton').onclick=()=>{
+    if(P.chapters.length && !confirm('Dodać 13 rozdziałów-beatów do istniejącej struktury?')) return;
+    BEATS.forEach(b=>{const c=addChapter(b.n); c.act=b.act; const s=addScene(c); s.beat=b.k;});
+    commit(); toast('Dodano szkielet 3 aktów (13 beatów).');
+  };
+}
+
+/* ============================ RĘKOPIS ============================ */
+function paraHtml(text,hl){
+  return text.split(/\n\s*\n|\n/).map(p=>p.trim()).filter(Boolean).map(p=>{
+    let h=esc(p);
+    if(hl){ const re=new RegExp('('+hl.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); h=h.replace(re,'<span class="hl">$1</span>'); }
+    const dlg=/^[—–-]\s/.test(p);
+    return `<p class="${dlg?'dialog':''}">${h}</p>`;
+  }).join('');
+}
+function renderManuscript(){
+  const edit=$('#msEdit').checked, marks=$('#msScenes').checked, info=$('#msInfo').checked, notes=$('#msNotes').checked, q=$('#msFilter').value.trim();
+  const m=$('#manuscript'); m.classList.toggle('edit',edit);
+  let html=`<h1>${esc(P.title||'Bez tytułu')}</h1><div class="author">${esc(P.author||'')}</div>`;
+  let lastAct=null;
+  P.chapters.forEach((c,ci)=>{
+    if(marks && c.act!==lastAct){ lastAct=c.act; html+=`<div class="scene-info" style="text-align:center;border:none;letter-spacing:2px;text-transform:uppercase">${esc(ACTS[c.act]||'')}</div>`; }
+    html+=`<h2><small>Rozdział ${ci+1}</small>${esc(c.title)}</h2>`;
+    if(!c.scenes.length) html+=`<p class="empty">(rozdział bez scen)</p>`;
+    c.scenes.forEach((s,si)=>{
+      if(si>0 && marks) html+=`<div class="scene-mark">* * *</div>`;
+      if(info) html+=`<div class="scene-info"><b>${esc(s.title)}</b>${s.beat?' · '+esc(beatName(s.beat)):''}${s.pov?' · POV: '+esc(s.pov):''}${s.place?' · '+esc(s.place):''}<br>Cel: ${esc(s.goal||'—')} · Konflikt: ${esc(s.conflict||'—')} · Wynik: ${esc(s.outcome||'—')}${s.shift?' · Zmiana: '+esc(s.shift):''}</div>`;
+      const bl=bricksInScene(s.id);
+      if(!bl.length) html+=`<p class="empty">(pusta scena: ${esc(s.title)}${s.goal?' — cel: '+esc(s.goal):''})</p>`;
+      bl.forEach(b=>{
+        const dim=q && !matchFilter(b,q);
+        html+=`<div class="brick ${dim?'dim':''}" data-edit="${b.id}"><div class="tagline">${esc(b.kind)}${b.title?' · '+esc(b.title):''}${b.pov?' · POV '+esc(b.pov):''}${b.chars?.length?' · '+esc(b.chars.join(', ')):''}${b.tags?.length?' · #'+esc(b.tags.join(' #')):''} · ${esc(b.status)} · ${fmt(words(b.text))} sł.</div>${paraHtml(b.text, q && !dim ? q : '')}</div>`;
+      });
+    });
+  });
+  if(notes){ const ns=P.bricks.filter(b=>KINDS[b.kind]?.group==='notes'); if(ns.length){ html+=`<h2><small>Poza rękopisem</small>Notatki autorskie</h2>`+ns.map(b=>`<div class="note" data-edit="${b.id}"><b>${esc(b.title||b.kind)}</b>: ${esc(b.text)}</div>`).join(''); } }
+  const inb=inbox(); if(inb.length){ html+=`<h2><small>Poza rękopisem</small>Skrzynka — nieprzypisane (${inb.length})</h2>`+inb.map(b=>`<div class="brick" data-edit="${b.id}"><div class="tagline">${esc(b.kind)}${b.title?' · '+esc(b.title):''}</div>${paraHtml(b.text)}</div>`).join(''); }
+  if(!P.chapters.length && !inb.length) html+=`<p class="empty">Rękopis jest pusty. Wklej pierwszą cegiełkę w zakładce 1.</p>`;
+  m.innerHTML=html;
+}
+function manuscriptText(md){
+  const L=[]; const H=(lvl,t)=>L.push(md?'#'.repeat(lvl)+' '+t:t.toUpperCase());
+  H(1,P.title||'Bez tytułu'); if(P.author) L.push(P.author); L.push('');
+  let lastAct=null;
+  P.chapters.forEach((c,ci)=>{
+    if(c.act!==lastAct){ lastAct=c.act; L.push(''); L.push(md?'*'+ACTS[c.act]+'*':ACTS[c.act]); L.push(''); }
+    H(2,`Rozdział ${ci+1}. ${c.title}`); L.push('');
+    c.scenes.forEach((s,si)=>{ if(si>0){L.push('* * *');L.push('');} bricksInScene(s.id).forEach(b=>{L.push(b.text.trim());L.push('');}); });
+  });
+  return L.join('\n');
+}
+function download(name,content,type='text/plain'){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content],{type:type+';charset=utf-8'})); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function bindManuscript(){
+  ['#msEdit','#msScenes','#msInfo','#msNotes'].forEach(s=>$(s).addEventListener('change',renderManuscript));
+  $('#msFilter').addEventListener('input',renderManuscript);
+  $('#manuscript').addEventListener('click',e=>{ if(!$('#msEdit').checked) return; const el=e.target.closest('[data-edit]'); if(el) openEdit(el.dataset.edit); });
+  const fn=()=>(P.title||'rekopis').replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'').toLowerCase()||'rekopis';
+  $('#btnExportMd').onclick=()=>download(fn()+'.md',manuscriptText(true),'text/markdown');
+  $('#btnExportTxt').onclick=()=>download(fn()+'.txt',manuscriptText(false));
+  $('#btnPrint').onclick=()=>window.print();
+}
+
+/* ============================ BIBLIA ============================ */
+let bibleSub='chars', bibleSel=null;
+function bibleBricks(kind,name){ return P.bricks.filter(b=>b.kind===kind && strip(b.name)===strip(name)); }
+function mentions(name){ return P.bricks.filter(b=>KINDS[b.kind]?.group==='ms' && ((b.chars||[]).some(c=>strip(c)===strip(name))||strip(b.pov)===strip(name))); }
+function renderBible(){
+  $$('#tab-biblia .sub').forEach(b=>b.classList.toggle('active',b.dataset.sub===bibleSub));
+  const body=$('#bibleBody');
+  if(bibleSub==='chars'){
+    const sel=P.characters.find(c=>c.id===bibleSel)||P.characters[0]; bibleSel=sel?.id||null;
+    body.innerHTML=`<div class="cols wide" style="grid-template-columns:1fr 2fr">
+      <div class="card"><div class="row"><input id="newChar" placeholder="Nowa postać — imię"><button class="fixed" id="addChar">+</button></div>
+        <div class="list" style="margin-top:8px">${P.characters.map(c=>`<div class="item ${c.id===bibleSel?'sel':''}" data-sel="${c.id}"><b>${esc(c.name)}</b> <small>${esc(c.role||'')} · ${mentions(c.name).length} scen</small>${!c.want||!c.need?' <span class="badge warn">niepełna karta</span>':''}</div>`).join('')||'<p class="hint">Brak postaci. Dodaj ręcznie albo wklej cegiełkę typu <code>postać</code>.</p>'}</div></div>
+      <div class="card">${sel?charForm(sel):'<p class="hint">Wybierz postać.</p>'}</div></div>`;
+  } else if(bibleSub==='places'){
+    const sel=P.places.find(c=>c.id===bibleSel)||P.places[0]; bibleSel=sel?.id||null;
+    body.innerHTML=`<div class="cols wide" style="grid-template-columns:1fr 2fr">
+      <div class="card"><div class="row"><input id="newPlace" placeholder="Nowe miejsce — nazwa"><button class="fixed" id="addPlace">+</button></div>
+        <div class="list" style="margin-top:8px">${P.places.map(p=>`<div class="item ${p.id===bibleSel?'sel':''}" data-sel="${p.id}"><b>${esc(p.name)}</b> <small>${P.bricks.filter(b=>strip(b.place)===strip(p.name)).length} fragm.</small></div>`).join('')||'<p class="hint">Brak miejsc.</p>'}</div></div>
+      <div class="card">${sel?placeForm(sel):'<p class="hint">Wybierz miejsce.</p>'}</div></div>`;
+  } else if(bibleSub==='threads'){
+    const groups={}; P.bricks.filter(b=>b.kind==='watek'||b.kind==='przedmiot').forEach(b=>{(groups[b.kind+':'+(b.name||b.title||'?')] ||= []).push(b);});
+    body.innerHTML=`<div class="card">${Object.keys(groups).length?Object.entries(groups).map(([k,bs])=>`<h3><span class="badge kind">${esc(k.split(':')[0])}</span> ${esc(k.slice(k.indexOf(':')+1))}</h3>${bs.map(b=>`<div class="brick-full" data-edit="${b.id}" style="cursor:pointer">${esc(b.text)}</div>`).join('')}`).join(''):'<p class="hint">Brak wątków i przedmiotów. Wklej cegiełkę typu <code>wątek</code> lub <code>przedmiot</code> z nazwą.</p>'}</div>`;
+  } else if(bibleSub==='timeline'){
+    const ev=P.bricks.filter(b=>b.kind==='wydarzenie').sort((a,b)=>strip(a.when).localeCompare(strip(b.when),'pl',{numeric:true})||a.order-b.order);
+    body.innerHTML=`<div class="card"><p class="hint">Wydarzenia posortowane po polu „Kiedy” (porządek naturalny: dzień 2 przed dzień 10). Fabuła (kolejność w książce) może różnić się od chronologii — to tu pilnujesz spójności.</p>
+      ${ev.length?`<table style="width:100%;border-collapse:collapse;font-size:14px">${ev.map(b=>`<tr data-edit="${b.id}" style="cursor:pointer;border-top:1px solid var(--line)"><td style="padding:6px;white-space:nowrap;color:var(--muted)">${esc(b.when||'—')}</td><td style="padding:6px"><b>${esc(b.title||'')}</b> ${esc(b.text.slice(0,200))}${b.text.length>200?'…':''}</td><td style="padding:6px;white-space:nowrap;color:var(--muted)">${esc((b.chars||[]).join(', '))}${b.place?' · '+esc(b.place):''}</td></tr>`).join('')}</table>`:'<p class="hint">Brak wydarzeń.</p>'}</div>`;
+  } else {
+    const ns=P.bricks.filter(b=>KINDS[b.kind]?.group==='notes').sort((a,b)=>b.created.localeCompare(a.created));
+    body.innerHTML=`<div class="card">${ns.length?ns.map(b=>`<div class="brick-full" data-edit="${b.id}" style="cursor:pointer"><span class="badge kind">${esc(b.kind)}</span> <b>${esc(b.title||'')}</b> ${b.tags?.length?'<span class="hint">#'+esc(b.tags.join(' #'))+'</span>':''}<br>${esc(b.text)}</div>`).join(''):'<p class="hint">Brak notatek.</p>'}</div>`;
+  }
+}
+function charForm(c){
+  const ms=mentions(c.name); const cards=bibleBricks('postac',c.name);
+  const f=(k,l,ph,ta)=>`<label>${l}</label>${ta?`<textarea data-cf="${k}" rows="2" placeholder="${esc(ph)}">${esc(c[k])}</textarea>`:`<input data-cf="${k}" value="${esc(c[k])}" placeholder="${esc(ph)}">`}`;
+  return `<div class="row"><h2 style="margin:0">${esc(c.name)}</h2><button class="fixed small danger" id="delChar">usuń</button></div>
+    <div class="grid3">
+      <div>${f('name','Imię / nazwa','')}</div>
+      <div>${f('role','Rola w historii','protagonista / antagonista / mentor / sojusznik / cień…')}</div>
+      <div>${f('look','Wygląd, znak szczególny','coś, po czym czytelnik go rozpozna')}</div>
+    </div>
+    ${f('want','CHCE (cel zewnętrzny, widoczny w akcji)','np. odzyskać dom rodzinny')}
+    ${f('need','POTRZEBUJE (potrzeba wewnętrzna, często nieuświadomiona)','np. przestać kontrolować wszystkich wokół')}
+    ${f('wound','Rana / kłamstwo, w które wierzy','np. „jeśli nie będę idealna, nikt mnie nie pokocha”')}
+    ${f('arc','Łuk przemiany (kim jest na początku → kim jest na końcu)','np. tchórz → ktoś, kto bierze odpowiedzialność',true)}
+    ${f('voice','Głos: jak mówi, słownictwo, tik językowy','np. krótkie zdania, nigdy nie przeklina, mówi „słuchaj” co drugie zdanie')}
+    ${f('notes','Notatki','',true)}
+    <h4 style="margin-top:14px">Wklejone cegiełki o postaci (${cards.length})</h4>
+    ${cards.map(b=>`<div class="brick-full" data-edit="${b.id}" style="cursor:pointer" title="Kliknij, aby edytować">${b.title?'<b>'+esc(b.title)+'</b> ':''}${esc(b.text)}</div>`).join('')||'<p class="hint">Brak. Wklej tekst z tagiem <code>#typ: postać #nazwa: '+esc(c.name)+'</code>.</p>'}
+    <h4 style="margin-top:14px">Występuje w scenach (${ms.length})</h4>
+    <div>${ms.map(b=>`<span class="badge" data-edit="${b.id}" style="cursor:pointer">${esc(brickLocation(b))}</span>`).join(' ')||'<span class="hint">Jeszcze nie pojawia się w rękopisie (otaguj fragmenty polem „Postacie”).</span>'}</div>`;
+}
+function placeForm(p){
+  const cards=bibleBricks('miejsce',p.name); const used=P.bricks.filter(b=>strip(b.place)===strip(p.name));
+  return `<div class="row"><h2 style="margin:0">${esc(p.name)}</h2><button class="fixed small danger" id="delPlace">usuń</button></div>
+    <label>Nazwa</label><input data-pf="name" value="${esc(p.name)}">
+    <label>Opis (co widać, słychać, czuć — 2–3 detale zamiast pełnej inwentaryzacji)</label><textarea data-pf="desc" rows="3">${esc(p.desc)}</textarea>
+    <label>Nastrój / funkcja w historii</label><input data-pf="mood" value="${esc(p.mood)}" placeholder="np. bezpieczna przystań, która w akcie III staje się pułapką">
+    <label>Notatki</label><textarea data-pf="notes" rows="2">${esc(p.notes)}</textarea>
+    <h4 style="margin-top:14px">Wklejone cegiełki o miejscu (${cards.length})</h4>
+    ${cards.map(b=>`<div class="brick-full" data-edit="${b.id}" style="cursor:pointer">${esc(b.text)}</div>`).join('')||'<p class="hint">Brak.</p>'}
+    <h4 style="margin-top:14px">Fragmenty osadzone tutaj (${used.length})</h4>
+    <div>${used.map(b=>`<span class="badge" data-edit="${b.id}" style="cursor:pointer">${esc(brickLocation(b))}</span>`).join(' ')||'<span class="hint">Brak.</span>'}</div>`;
+}
+function bindBible(){
+  const root=$('#tab-biblia');
+  root.addEventListener('click',e=>{
+    const sub=e.target.closest('.sub'); if(sub){bibleSub=sub.dataset.sub;bibleSel=null;return renderBible();}
+    const ed=e.target.closest('[data-edit]'); if(ed) return openEdit(ed.dataset.edit);
+    const it=e.target.closest('[data-sel]'); if(it){bibleSel=it.dataset.sel;return renderBible();}
+    if(e.target.id==='addChar'){ const n=$('#newChar').value.trim(); if(!n) return; const c=ensureCharacter(n); bibleSel=c.id; return commit(); }
+    if(e.target.id==='addPlace'){ const n=$('#newPlace').value.trim(); if(!n) return; const p=ensurePlace(n); bibleSel=p.id; return commit(); }
+    if(e.target.id==='delChar'){ const c=P.characters.find(x=>x.id===bibleSel); if(confirm(`Usunąć kartę postaci „${c.name}”? Cegiełki i tagi w tekście zostają.`)){ P.characters=P.characters.filter(x=>x!==c); bibleSel=null; commit(); } }
+    if(e.target.id==='delPlace'){ const p=P.places.find(x=>x.id===bibleSel); if(confirm(`Usunąć miejsce „${p.name}”?`)){ P.places=P.places.filter(x=>x!==p); bibleSel=null; commit(); } }
+  });
+  root.addEventListener('input',e=>{
+    const d=e.target.dataset;
+    if(d.cf){ const c=P.characters.find(x=>x.id===bibleSel); if(c){c[d.cf]=e.target.value; save();} }
+    if(d.pf){ const p=P.places.find(x=>x.id===bibleSel); if(p){p[d.pf]=e.target.value; save();} }
+  });
+  root.addEventListener('focusout',e=>{ if(e.target.dataset.cf||e.target.dataset.pf) renderBible(); });
+  root.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.id==='newChar') $('#addChar').click(); if(e.key==='Enter'&&e.target.id==='newPlace') $('#addPlace').click(); });
+}
+
+/* ============================ EDYCJA CEGIEŁKI ============================ */
+let editId=null;
+function openEdit(id){
+  const b=P.bricks.find(x=>x.id===id); if(!b) return; editId=id;
+  fillKindSelect($('#mKind'),b.kind);
+  $('#mTitle').value=b.title||''; $('#mStatus').value=b.status||'szkic'; $('#mName').value=b.name||'';
+  $('#mChars').value=(b.chars||[]).join(', '); $('#mPov').value=b.pov||''; $('#mPlace').value=b.place||''; $('#mTags').value=(b.tags||[]).join(', '); $('#mWhen').value=b.when||'';
+  $('#mText').value=b.text;
+  const r=sceneById(b.sceneId);
+  fillChapterSelect($('#mChapter'),r?.c.id||''); fillSceneSelect($('#mScene'),r?.c.id||'',r?.s.id||'');
+  $('#mPlacement').style.display = KINDS[b.kind].group==='ms'?'':'none';
+  $('#modalBg').classList.add('show'); $('#mText').focus();
+}
+function closeEdit(){ $('#modalBg').classList.remove('show'); editId=null; }
+function bindModal(){
+  $('#mKind').addEventListener('change',()=>{ $('#mPlacement').style.display = KINDS[$('#mKind').value].group==='ms'?'':'none'; });
+  $('#mChapter').addEventListener('change',()=>{ let v=$('#mChapter').value; fillSceneSelect($('#mScene'),v,''); });
+  $('#mCancel').onclick=closeEdit;
+  $('#modalBg').addEventListener('click',e=>{ if(e.target.id==='modalBg') closeEdit(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&editId) closeEdit(); if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&editId) $('#mSave').click(); });
+  $('#mDelete').onclick=()=>{ const b=P.bricks.find(x=>x.id===editId); if(!confirm('Usunąć tę cegiełkę bezpowrotnie?')) return; P.bricks=P.bricks.filter(x=>x!==b); closeEdit(); commit(); toast('Usunięto.'); };
+  $('#mSave').onclick=()=>{
+    const b=P.bricks.find(x=>x.id===editId); if(!b) return;
+    b.kind=$('#mKind').value; b.title=$('#mTitle').value.trim(); b.status=$('#mStatus').value; b.name=$('#mName').value.trim();
+    b.chars=splitList($('#mChars').value); b.pov=$('#mPov').value.trim(); b.place=$('#mPlace').value.trim(); b.tags=splitList($('#mTags').value); b.when=$('#mWhen').value.trim();
+    b.text=$('#mText').value.trim(); b.updated=new Date().toISOString();
+    if(KINDS[b.kind].group==='ms'){
+      let chV=$('#mChapter').value, scV=$('#mScene').value, ch=null, sc=null;
+      if(chV==='__new'){ ch=addChapter(); sc=addScene(ch); } else if(chV){ ch=chapterById(chV); if(scV==='__new') sc=addScene(ch); else if(scV) sc=sceneById(scV)?.s||null; }
+      if((sc?.id||null)!==(b.sceneId||null)) placeBrick(b,sc?.id||null,'end');
+    } else { b.sceneId=null; if(!b.name) b.name=b.title||b.chars[0]||''; if(b.kind==='postac'&&b.name) ensureCharacter(b.name); if(b.kind==='miejsce'&&b.name) ensurePlace(b.name); }
+    if(b.place) ensurePlace(b.place);
+    closeEdit(); commit(); toast('Zapisano.');
+  };
+}
+
+/* ============================ ZASADY + DIAGNOSTYKA ============================ */
+const RULES = `
+<h2>Reguły dobrego pisania — ściąga</h2>
+<p class="hint">Skondensowane, sprawdzone zasady warsztatowe (struktura trzyaktowa, scena/sequel Swaina, łuk postaci, „pokaż, nie opowiadaj”). Diagnostyka obok sprawdza te, które da się zmierzyć.</p>
+<h3>1. Historia = pragnienie + przeszkoda + zmiana</h3>
+<ul><li>Bohater <b>czegoś chce</b> (cel zewnętrzny) i <b>czegoś potrzebuje</b> (wewnętrznie). Napięcie między tymi dwoma to serce książki.</li>
+<li>Bez przeszkody nie ma historii. Antagonista (osoba, system, natura, własna słabość) musi być realnie silny.</li>
+<li>Na końcu coś musi się <b>nieodwracalnie zmienić</b>: bohater, świat albo relacja.</li></ul>
+<h3>2. Struktura trzyaktowa (proporcje ~25 / 50 / 25 %)</h3>
+<ul><li><b>Akt I</b>: hak w pierwszej scenie, świat „przed”, incydent inicjujący (~10–12 %), decyzja/przekroczenie progu (~25 %).</li>
+<li><b>Akt II</b>: próby i eskalacja, punkt środkowy (~50 %) odwraca sytuację (fałszywe zwycięstwo lub porażka), przeciwnicy się zbliżają, „wszystko stracone” (~75 %).</li>
+<li><b>Akt III</b>: decyzja wynikająca z przemiany, kulminacja (bohater rozwiązuje problem sam, dzięki temu, czego się nauczył), krótkie rozwiązanie z obrazem końcowym będącym lustrem otwarcia.</li></ul>
+<h3>3. Scena — najmniejsza jednostka napięcia</h3>
+<ul><li>Każda scena ma: <b>cel</b> postaci POV, <b>konflikt</b>, <b>wynik</b>. Najlepsze wyniki to „nie, i jest gorzej” albo „tak, ale…”.</li>
+<li>Po scenie akcji często przychodzi <b>sequel</b>: reakcja → dylemat → decyzja, która uruchamia następną scenę.</li>
+<li>Coś musi się zmienić między początkiem a końcem sceny (wartość: nadzieja→strach, zaufanie→zdrada). Jeśli nic się nie zmienia — scena do wycięcia lub połączenia.</li>
+<li>Wchodź późno, wychodź wcześnie. Zaczynaj w ruchu, kończ przed wyczerpaniem napięcia.</li></ul>
+<h3>4. Postać</h3>
+<ul><li>Karta: chce / potrzebuje / rana lub kłamstwo / łuk / głos. Bez „chce” postać jest statystą.</li>
+<li>Charakteryzacja przez <b>wybory pod presją</b>, nie przez opis. Czytelnik wierzy w to, co postać robi, nie w to, co narrator o niej mówi.</li>
+<li>Każda ważna postać powinna mieć własny, rozpoznawalny głos w dialogu.</li>
+<li>Antagonista ma własną logikę i rację ze swojego punktu widzenia.</li></ul>
+<h3>5. Pokaż, nie opowiadaj (ale opowiadaj, gdy trzeba)</h3>
+<ul><li>Emocje przez ciało, gest, działanie i decyzje, nie przez etykiety („była smutna”).</li>
+<li>Unikaj słów‑filtrów: <i>poczuł, zobaczył, usłyszał, pomyślał, wydawało się</i> — zamiast „zobaczyła, że drzwi są otwarte” pisz „drzwi były otwarte”.</li>
+<li>Ostrożnie z przysłówkami i intensyfikatorami (<i>bardzo, nagle, naprawdę, po prostu</i>). Silny czasownik zamiast słabego + przysłówek.</li>
+<li>Streszczenie (telling) jest w porządku przy przeskokach w czasie i przy mało ważnych fragmentach — oszczędza sceny na to, co ważne.</li></ul>
+<h3>6. Dialog</h3>
+<ul><li>Dialog to działanie: każda wymiana zdań ma cel i podtekst. Ludzie rzadko mówią wprost, o co im chodzi.</li>
+<li>Tnij small talk, powitania, powtarzanie tego, co czytelnik już wie.</li>
+<li>„Powiedział/powiedziała” jest niewidzialne; unikaj efektownych zamienników (wysyczał, wykrzyknął) i przysłówków w didaskaliach.</li>
+<li>Przeplataj dialog gestem i reakcją, żeby czytelnik „widział” scenę. W polskiej typografii: półpauza lub pauza (— ) na początku wypowiedzi.</li></ul>
+<h3>7. Punkt widzenia (POV)</h3>
+<ul><li>Jedna scena = jeden POV. Skoki między głowami w jednej scenie dezorientują.</li>
+<li>Narrator wie tylko to, co wie postać POV. Nie może opisać wyrazu własnej twarzy.</li>
+<li>Zmianę POV sygnalizuj nową sceną lub rozdziałem.</li></ul>
+<h3>8. Tempo i rozdziały</h3>
+<ul><li>Kończ rozdziały na pytaniu, decyzji lub zwrocie — czytelnik ma chcieć przewrócić stronę.</li>
+<li>Zmieniaj rytm: po intensywnej scenie daj oddech, ale nie nudę. Krótkie zdania przyspieszają, długie zwalniają.</li>
+<li>Rozdziały zwykle 1,5–5 tys. słów; bardzo nierówne długości są sygnałem do sprawdzenia.</li></ul>
+<h3>9. Opis i świat</h3>
+<ul><li>Dwa–trzy konkretne, nieoczywiste detale zamiast pełnej inwentaryzacji. Detal filtrowany przez emocję postaci.</li>
+<li>Informacje o świecie podawaj wtedy, gdy są potrzebne do zrozumienia sceny (nie w „wykładzie”).</li>
+<li>Pilnuj spójności: oś czasu, odległości, kto co wie i kiedy — do tego służy Biblia świata.</li></ul>
+<h3>10. Redakcja — kolejność</h3>
+<ol><li><b>Struktura</b>: czy każda scena ma cel/konflikt/wynik, czy beaty są na miejscu, czy łuk bohatera domyka się w kulminacji.</li>
+<li><b>Postacie i logika</b>: motywacje, spójność, oś czasu, czy antagonista jest wystarczająco groźny.</li>
+<li><b>Sceny</b>: wejście późno / wyjście wcześnie, POV, tempo, podtekst w dialogu.</li>
+<li><b>Zdania</b>: słowa‑filtry, przysłówki, powtórzenia, strona bierna, długość zdań.</li>
+<li><b>Korekta</b>: literówki, interpunkcja, typografia dialogów. Dopiero na końcu.</li></ol>
+<p class="hint">Czytanie „jednym ciągiem” w zakładce Rękopis służy do kroków 1–3. Do kroku 4 użyj filtra słów w diagnostyce.</p>`;
+
+function renderRules(){ if(!$('#rules').innerHTML) $('#rules').innerHTML=RULES; }
+function diagnostics(){
+  const out=[]; const add=(lvl,msg)=>out.push({lvl,msg});
+  const all=msBricks().filter(b=>sceneById(b.sceneId));
+  const total=all.reduce((a,b)=>a+words(b.text),0);
+  const actW={1:0,2:0,3:0};
+  P.chapters.forEach(c=>{ actW[c.act]=(actW[c.act]||0)+c.scenes.reduce((a,s)=>a+bricksInScene(s.id).reduce((x,b)=>x+words(b.text),0),0); });
+  // ogólne
+  if(!P.chapters.length) add('warn','Brak struktury rozdziałów — dodaj rozdziały lub wygeneruj szkielet 3 aktów.');
+  const inb=inbox().length; if(inb) add('warn',`${inb} fragm. w Skrzynce — nie są częścią rękopisu, dopóki ich nie przypiszesz do sceny.`);
+  if(total){
+    const pct=a=>Math.round(actW[a]/total*100);
+    const bar=`<div class="bar" title="Akt I / II / III"><span style="width:${pct(1)}%;background:var(--ok)"></span><span style="width:${pct(2)}%;background:var(--warn)"></span><span style="width:${pct(3)}%;background:var(--accent)"></span></div>`;
+    add(pct(2)>=40&&pct(2)<=60&&pct(1)<=35&&pct(3)<=35?'ok':'warn',`Proporcje aktów: I ${pct(1)} % · II ${pct(2)} % · III ${pct(3)} % (cel ~25 / 50 / 25).${bar}`);
+    if(P.targetWords) add(total>=P.targetWords*0.9?'ok':'info',`Długość: ${fmt(total)} z ~${fmt(P.targetWords)} słów celu (${Math.round(total/P.targetWords*100)} %).`);
+  }
+  // beaty
+  const usedBeats=new Set(); P.chapters.forEach(c=>c.scenes.forEach(s=>s.beat&&usedBeats.add(s.beat)));
+  const missingBeats=BEATS.filter(b=>!usedBeats.has(b.k)).map(b=>b.n);
+  if(P.chapters.length){ if(missingBeats.length===0) add('ok','Wszystkie 13 beatów struktury ma przypisaną scenę.'); else if(missingBeats.length<BEATS.length) add('warn','Beaty bez sceny: '+missingBeats.join('; ')+'.'); else add('info','Żadna scena nie ma przypisanego beatu — przypisz je w Strukturze, żeby sprawdzić kompletność łuku.'); }
+  // sceny i rozdziały
+  P.chapters.forEach((c,ci)=>{
+    const cw=c.scenes.reduce((a,s)=>a+bricksInScene(s.id).reduce((x,b)=>x+words(b.text),0),0);
+    if(!c.scenes.length) add('warn',`Rozdział ${ci+1} „${esc(c.title)}” nie ma scen.`);
+    if(cw>7000) add('warn',`Rozdział ${ci+1} ma ${fmt(cw)} słów — bardzo długi, rozważ podział.`);
+    if(c.scenes.length && cw && cw<600) add('info',`Rozdział ${ci+1} ma tylko ${fmt(cw)} słów.`);
+    c.scenes.forEach((s,si)=>{
+      const bl=bricksInScene(s.id); const tag=`Scena ${ci+1}.${si+1} „${esc(s.title)}”`;
+      const miss=[!s.goal&&'cel',!s.conflict&&'konflikt',!s.outcome&&'wynik'].filter(Boolean);
+      if(miss.length && bl.length) add('warn',`${tag}: karta bez: ${miss.join(', ')}. Scena bez konfliktu to kandydat do wycięcia.`);
+      if(!s.pov && bl.length) add('info',`${tag}: brak POV.`);
+      const povs=new Set(bl.map(b=>strip(b.pov)).filter(Boolean)); if(povs.size>1) add('bad',`${tag}: fragmenty mają różne POV (${[...povs].join(', ')}) — skok między głowami w jednej scenie.`);
+      if(s.pov && bl.some(b=>b.pov && strip(b.pov)!==strip(s.pov))) add('warn',`${tag}: POV sceny (${esc(s.pov)}) różni się od POV fragmentu.`);
+      const txt=bl.map(b=>b.text).join('\n'); const w=words(txt);
+      if(w){ const lines=txt.split('\n').filter(l=>l.trim()); const dl=lines.filter(l=>/^\s*[—–-]\s/.test(l)).length; const ratio=dl/lines.length;
+        if(lines.length>=8 && ratio>0.85) add('info',`${tag}: prawie sam dialog (${Math.round(ratio*100)} % linii) — dodaj gest, reakcję, otoczenie.`);
+        if(w>1500 && dl===0) add('info',`${tag}: ${fmt(w)} słów bez ani jednej linii dialogu — sprawdź tempo.`); }
+    });
+  });
+  // postacie
+  P.characters.forEach(c=>{ const m=[!c.want&&'chce',!c.need&&'potrzebuje',!c.arc&&'łuk'].filter(Boolean); if(m.length) add('info',`Postać „${esc(c.name)}”: brak w karcie: ${m.join(', ')}.`); });
+  const named=new Set(); msBricks().forEach(b=>{(b.chars||[]).forEach(n=>named.add(n.trim())); if(b.pov) named.add(b.pov.trim());});
+  const unknown=[...named].filter(n=>n&&!P.characters.some(c=>strip(c.name)===strip(n)));
+  if(unknown.length) add('warn',`Postacie otagowane w tekście, ale bez karty w Biblii: ${unknown.map(esc).join(', ')}. <button class="small" data-addchars="${esc(unknown.join('|'))}">Dodaj karty</button>`);
+  // słowa-filtry
+  if(total>300){
+    const low=' '+all.map(b=>b.text).join(' ').toLowerCase().replace(/\s+/g,' ')+' ';
+    const hits=FILTER_WORDS.map(w=>{ const re=new RegExp('(?<![\\p{L}])'+w.replace(/ /g,'\\s+')+'(?![\\p{L}])','giu'); return [w,(low.match(re)||[]).length]; }).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]);
+    const per1k=hits.reduce((a,x)=>a+x[1],0)/total*1000;
+    if(hits.length) add(per1k>12?'warn':per1k>6?'info':'ok',`Słowa‑filtry i intensyfikatory: ${per1k.toFixed(1)} na 1000 słów (${hits.slice(0,8).map(x=>x[0]+' ×'+x[1]).join(', ')}). Cel: poniżej ~6.`);
+    const cnt={}; for(const w of low.split(/[^\p{L}]+/u)) if(w.length>=7) cnt[w]=(cnt[w]||0)+1;
+    const top=Object.entries(cnt).filter(x=>x[1]>=6).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    if(top.length) add('info','Najczęściej powtarzane dłuższe słowa (sprawdź, czy to nie mania): '+top.map(x=>x[0]+' ×'+x[1]).join(', ')+'.');
+  }
+  // statusy
+  const st={szkic:0,redakcja:0,gotowe:0}; all.forEach(b=>st[b.status]=(st[b.status]||0)+1);
+  if(all.length) add('info',`Status fragmentów: szkic ${st.szkic} · po redakcji ${st.redakcja} · gotowe ${st.gotowe}.`);
+  if(!out.length) add('ok','Nic do zgłoszenia.');
+  return out;
+}
+function renderDiag(){
+  const out=diagnostics(); const icon={ok:'✓',warn:'!',bad:'✕',info:'·'};
+  $('#diag').innerHTML='<ul style="padding-left:6px;list-style:none">'+out.map(o=>`<li><span class="lvl ${o.lvl}">${icon[o.lvl]||'·'}</span>${o.msg}</li>`).join('')+'</ul>';
+}
+function bindRules(){
+  $('#diag').addEventListener('click',e=>{ const t=e.target.closest('[data-addchars]'); if(t){ t.dataset.addchars.split('|').forEach(n=>ensureCharacter(n)); commit(); toast('Dodano karty postaci.'); } });
+}
+
+/* ============================ RENDER / NAWIGACJA ============================ */
+let activeTab='wklej';
+function renderStats(){
+  const total=msBricks().filter(b=>sceneById(b.sceneId)).reduce((a,b)=>a+words(b.text),0);
+  $('#stats').textContent=`${fmt(total)} słów · ${P.chapters.length} rozdz. · ${P.bricks.length} cegiełek · ${P.characters.length} postaci`;
+}
+function render(){
+  renderStats();
+  if(activeTab==='wklej'){ const ch=$('#fChapter').value, sc=$('#fScene').value; fillChapterSelect($('#fChapter'),ch); fillSceneSelect($('#fScene'),$('#fChapter').value,sc); syncPasteFormVisibility(); refreshDestination(); renderRecent(); }
+  if(activeTab==='struktura') renderStructure();
+  if(activeTab==='rekopis') renderManuscript();
+  if(activeTab==='biblia') renderBible();
+  if(activeTab==='zasady'){ renderRules(); renderDiag(); }
+}
+function bindNav(){
+  $$('nav.tabs button').forEach(b=>b.onclick=()=>{ activeTab=b.dataset.tab; $$('nav.tabs button').forEach(x=>x.classList.toggle('active',x===b)); $$('section.tab').forEach(s=>s.classList.toggle('active',s.id==='tab-'+activeTab)); render(); });
+  $('#projTitle').value=P.title; $('#projAuthor').value=P.author;
+  $('#projTitle').addEventListener('input',e=>{P.title=e.target.value;save();});
+  $('#projAuthor').addEventListener('input',e=>{P.author=e.target.value;save();});
+  $('#btnExport').onclick=()=>download(((P.title||'pisarnia').replace(/[^\p{L}\p{N}]+/gu,'-').toLowerCase()||'pisarnia')+'-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(P,null,2),'application/json');
+  $('#btnImport').onclick=()=>$('#fileImport').click();
+  $('#fileImport').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d||!Array.isArray(d.bricks)||!Array.isArray(d.chapters)) throw new Error('to nie jest plik projektu Pisarni'); if(P.bricks.length && !confirm('Zastąpić bieżący projekt zaimportowanym? (Bieżący możesz wcześniej wyeksportować.)')) return; P=Object.assign(newProject(),d); $('#projTitle').value=P.title; $('#projAuthor').value=P.author; commit(); toast('Zaimportowano projekt.'); }catch(err){ toast('Błąd importu: '+err.message); } }; r.readAsText(f); e.target.value=''; });
+  $('#btnNew').onclick=()=>{ if(!confirm('Wyczyścić wszystko i zacząć nowy projekt? Wyeksportuj najpierw kopię JSON, jeśli chcesz ją zachować.')) return; P=newProject(); $('#projTitle').value=''; $('#projAuthor').value=''; commit(); };
+  document.addEventListener('click',e=>{ if(activeTab==='wklej'){ const t=e.target.closest('[data-edit]'); if(t&&$('#tab-wklej').contains(t)) openEdit(t.dataset.edit); } });
+}
+function bindPaste(){
+  fillKindSelect($('#fKind'),'scena');
+  $('#fKind').addEventListener('change',()=>{syncPasteFormVisibility();refreshDestination();});
+  $('#fChapter').addEventListener('change',()=>{ delete $('#fChapter').dataset.pending; delete $('#fScene').dataset.pending; fillSceneSelect($('#fScene'),$('#fChapter').value,''); refreshDestination(); });
+  ['#fScene','#fPos','#fName','#fWhen'].forEach(id=>$(id).addEventListener('input',refreshDestination));
+  ['#fScene','#fPos'].forEach(id=>$(id).addEventListener('change',refreshDestination));
+  $('#pasteText').addEventListener('input',onPasteInput);
+  $('#pasteSave').onclick=savePaste;
+  $('#pasteClear').onclick=()=>{ $('#pasteText').value=''; onPasteInput(); };
+  document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&activeTab==='wklej'&&!editId&&document.activeElement===$('#pasteText')) savePaste(); });
+}
+
+bindNav(); bindPaste(); bindStructure(); bindManuscript(); bindBible(); bindModal(); bindRules();
+render();
+</script>
+</body>
+</html>
