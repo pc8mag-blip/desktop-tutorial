@@ -12,6 +12,9 @@ Jeden plik: `pisarnia/index.html`. Otwórz w przeglądarce (lokalnie lub przez G
 5. **Biblia świata** — karta postaci: archetyp (mentor, strażnik progu, zwiastun, zmiennokształtny, cień, sprzymierzeniec, trickster), CHCĘ / PRAGNĘ / RYSA, łuk, głos oraz kwestionariusz bohatera (42 pytania) z licznikiem wypełnienia. Miejsca, wątki, oś czasu, notatki.
 6. **Zasady i diagnostyka** — ściąga z metody Bondy (bohater, 3 akty / 8 sekwencji / 11 punktów, 13 zasad sceny, narracja, dialog, świat, 6 poziomów, dekalog, redakcja, wydanie) i automatyczne sprawdzenie projektu: postęp procesu, sekwencje bez rozdziału, proporcje aktów, punkty fabuły bez sceny lub bez treści w planie, scena w złej sekwencji, karty scen bez konfliktu / haka / tematu, skoki POV, postacie bez CHCĘ/PRAGNĘ/rysy, kwestionariusz, słowa‑filtry, powtórzenia.
 
+7. **Czat (układanie z AI, bez klucza API)** — kopiujesz kontekst książki (plan, struktura z kartami scen, indeks fragmentów, karty postaci, pełny tekst Skrzynki; bez notatnika osobistego) razem z poleceniem do dowolnego czatu. Czat odpowiada paczką JSON `pisarnia-placement-v1`: dla każdego fragmentu rozdział, scena, uzasadnienie, pewność, a przy niepewności pytanie do autora. Wklejasz paczkę, widzisz podgląd, zatwierdzasz. Paczka z nieaktualną rewizją lub użyta drugi raz jest odrzucana; format `pracownia-placement-v1` też jest akceptowany. Historia ostatnich 30 operacji (czat i ręczne) z cofaniem ostatniej, które nie nadpisze późniejszych zmian. Jeśli przeglądarka udostępnia narzędzia strony (WebMCP), te same operacje są zarejestrowane jako narzędzia dla czatu wbudowanego w przeglądarkę.
+8. **Ochrona danych** — zapis wstrzymuje się, gdy projekt zmienił się w innej karcie (wybierasz: wczytaj tamtą wersję, nadpisz, pobierz swoją). Notatnik osobisty z kroku 1 jest prywatny: nie trafia do kontekstu dla czatu ani do eksportu warsztatu (.md).
+
 ## Nagłówek tagów
 
 Pierwsze linie wklejanego tekstu zaczynające się od `#`:
